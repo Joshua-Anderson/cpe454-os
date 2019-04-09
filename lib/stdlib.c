@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "stdlib.h"
 
 void *memset(void *dst, int c, size_t n) {
@@ -11,7 +12,7 @@ void *memset(void *dst, int c, size_t n) {
 
 void *memcpy(void *dst, const void *src, size_t n) {
   for (int i = 0; i < n; i++) {
-    ((char *)dst)[i] = ((char *)src)[i];
+    ((uint8_t *)dst)[i] = ((uint8_t *)src)[i];
   }
 
   return dst;
@@ -19,7 +20,7 @@ void *memcpy(void *dst, const void *src, size_t n) {
 
 size_t strlen(const char *s) {
   size_t len = 0;
-  while(*s != NULL) {
+  while(*s != 0) {
     len++;
     s += 1;
   }

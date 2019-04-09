@@ -1,7 +1,7 @@
 ARCH ?= x86_64
 CROSS_CC ?= /usr/local/454-cross/bin/x86_64-elf-gcc
 
-override CFLAGS+=-Wall -Werror -Ilib
+override CFLAGS+=-Wall -Werror -ffreestanding -lgcc -Ilib
 
 ifeq ($(DEBUG),y)
    override CFLAGS+=-g
