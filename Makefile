@@ -1,10 +1,10 @@
 ARCH ?= x86_64
-CROSS_CC ?= /usr/local/454-cross/bin/x86_64-elf-gcc
+CROSS_CPP ?= /usr/local/454-cross/bin/x86_64-elf-g++
 
-override CFLAGS+=-Wall -Werror -ffreestanding -lgcc -Ilib
+override CPPFLAGS+=-Wall -Wextra -Werror -ffreestanding -fno-exceptions -fno-rtti -lgcc -Ilib
 
 ifeq ($(DEBUG),y)
-   override CFLAGS+=-g
+   override CPPFLAGS+=-g
 endif
 
 KERNEL := out/sol.bin
@@ -54,8 +54,8 @@ out/arch/$(ARCH)/%.o: arch/$(ARCH)/%.asm
 
 out/init/%.o: init/%.c
 	@mkdir -p $(shell dirname $@)
-	$(CROSS_CC) $(CFLAGS) -c $< -o $@
+	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
 
 out/lib/%.o: lib/%.c
 	@mkdir -p $(shell dirname $@)
-	$(CROSS_CC) $(CFLAGS) -Wno-builtin-declaration-mismatch -c $< -o $@
+	$(CROSS_CPP) $(CPPFLAGS) -Wno-builtin-declaration-mismatch -c $< -o $@
