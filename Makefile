@@ -1,5 +1,6 @@
 ARCH ?= x86_64
 CROSS_CPP ?= /usr/local/454-cross/bin/x86_64-elf-g++
+CROSS_LD ?= /usr/local/454-cross/bin/x86_64-elf-ld
 
 override CPPFLAGS+=-Wall -Wextra -Werror -ffreestanding -fno-exceptions -fno-rtti -lgcc -Ilib
 
@@ -15,9 +16,9 @@ ASM_SRC := $(wildcard arch/$(ARCH)/*.asm)
 ASM_OBJ := $(patsubst arch/$(ARCH)/%.asm, \
 	out/arch/$(ARCH)/%.o, $(ASM_SRC))
 
-C_HDR := $(wildcard lib/*.h)
-C_SRC := $(wildcard init/*.c lib/*.c)
-C_OBJ := $(patsubst %.c, out/%.o, $(C_SRC))
+C_HDR := $(wildcard lib/*.h drivers/display/*.h drivers/display/$(ARCH)/*.h)
+C_SRC := $(wildcard init/*.cpp lib/*.cpp drivers/display/$(ARCH)/*.cpp)
+C_OBJ := $(patsubst %.cpp, out/%.o, $(C_SRC))
 
 LD_SCRIPT := arch/$(ARCH)/linker.ld
 GRUB_CFG := arch/$(ARCH)/grub.cfg
@@ -46,16 +47,20 @@ $(IMG): $(KERNEL) $(GRUB_CFG)
 	./mkimage.sh $(IMG) $(ROOTFS)
 
 $(KERNEL): $(ASM_OBJ) $(C_OBJ) $(LD_SCRIPT)
-	ld -n -T $(LD_SCRIPT) -o $(KERNEL) $(ASM_OBJ) $(C_OBJ)
+	$(CROSS_LD) -n -T $(LD_SCRIPT) -o $(KERNEL) $(ASM_OBJ) $(C_OBJ)
 
 out/arch/$(ARCH)/%.o: arch/$(ARCH)/%.asm
 	@mkdir -p $(shell dirname $@)
 	nasm -felf64 $< -o $@
 
-out/init/%.o: init/%.c
+out/init/%.o: init/%.cpp
 	@mkdir -p $(shell dirname $@)
 	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
 
-out/lib/%.o: lib/%.c
+out/lib/%.o: lib/%.cpp
 	@mkdir -p $(shell dirname $@)
 	$(CROSS_CPP) $(CPPFLAGS) -Wno-builtin-declaration-mismatch -c $< -o $@
+
+out/drivers/display/$(ARCH)/%.o: drivers/display/$(ARCH)/%.cpp
+	@mkdir -p $(shell dirname $@)
+	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
