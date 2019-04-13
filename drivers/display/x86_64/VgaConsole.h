@@ -11,7 +11,7 @@ private:
   void Scroll();
 
   static const int rows = 25;
-  static const int cols = 25;
+  static const int cols = 80;
   int pos = 0;
 };
 

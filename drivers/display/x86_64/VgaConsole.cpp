@@ -29,7 +29,7 @@ void VgaConsole::PrintChar(char in) {
   switch(in) {
   case '\n':
     VgaConsole::Scroll();
-    VgaConsole::pos += VgaConsole::cols;
+    VgaConsole::pos += VgaConsole::cols - VgaConsole::pos % VgaConsole::cols;
     break;
   case '\b':
     VgaConsole::pos--;
@@ -38,11 +38,11 @@ void VgaConsole::PrintChar(char in) {
     VgaConsole::pos = VgaConsole::pos - VgaConsole::pos % VgaConsole::cols;
     break;
   default:
-    //VgaConsole::Scroll();
-    (c+VgaConsole::pos)->blink = 0;
-    (c+VgaConsole::pos)->bg_color = Color::Black;
-    (c+VgaConsole::pos)->fg_color = Color::White;
-    (c+VgaConsole::pos)->cp = in;
+    VgaConsole::Scroll();
+    c[VgaConsole::pos].blink = 0;
+    c[VgaConsole::pos].bg_color = Color::Black;
+    c[VgaConsole::pos].fg_color = Color::White;
+    c[VgaConsole::pos].cp = in;
     VgaConsole::pos++;
   }
 }
