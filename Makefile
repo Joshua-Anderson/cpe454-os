@@ -16,8 +16,12 @@ ASM_SRC := $(wildcard arch/$(ARCH)/*.asm)
 ASM_OBJ := $(patsubst arch/$(ARCH)/%.asm, \
 	out/arch/$(ARCH)/%.o, $(ASM_SRC))
 
-C_HDR := $(wildcard lib/*.h lib/$(ARCH)/*.h drivers/display/*.h drivers/display/$(ARCH)/*.h)
-C_SRC := $(wildcard init/*.cpp lib/*.cpp lib/$(ARCH)/*.cpp drivers/display/$(ARCH)/*.cpp)
+C_HDR := $(wildcard lib/*.h lib/$(ARCH)/*.h \
+					drivers/display/*.h drivers/display/$(ARCH)/*.h \
+					drivers/char/*.h drivers/char/$(ARCH)/*.h)
+C_SRC := $(wildcard init/*.cpp lib/*.cpp lib/$(ARCH)/*.cpp \
+					drivers/display/$(ARCH)/*.cpp \
+					drivers/char/$(ARCH)/*.cpp)
 C_OBJ := $(patsubst %.cpp, out/%.o, $(C_SRC))
 
 LD_SCRIPT := arch/$(ARCH)/linker.ld
@@ -63,8 +67,12 @@ out/lib/%.o: lib/%.cpp
 
 out/lib/$(ARCH)/%.o: lib/$(ARCH)/%.cpp
 	@mkdir -p $(shell dirname $@)
-	$(CROSS_CPP) $(CPPFLAGS) -Wno-builtin-declaration-mismatch -c $< -o $@
+	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
 
 out/drivers/display/$(ARCH)/%.o: drivers/display/$(ARCH)/%.cpp
+	@mkdir -p $(shell dirname $@)
+	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
+
+out/drivers/char/$(ARCH)/%.o: drivers/char/$(ARCH)/%.cpp
 	@mkdir -p $(shell dirname $@)
 	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
