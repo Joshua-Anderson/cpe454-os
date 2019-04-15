@@ -7,6 +7,11 @@ class PS2 : public CharDev {
 public:
   void Init();
   char GetChar();
+
+private:
+  bool shift = false;
+
+  char GetLetter(char c);
 };
 
 #endif

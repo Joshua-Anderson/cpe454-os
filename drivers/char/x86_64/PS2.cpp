@@ -91,6 +91,15 @@ void PS2::Init() {
   outb(PS2_DATA_REG, PS2_DEV_RST);
 }
 
+char PS2::GetLetter(char c) {
+  if(PS2::shift) {
+    return c - 32;
+  }
+
+
+  return c;
+}
+
 char PS2::GetChar() {
   // Poll into there is something in the output buffer
   poll_ps2_outb(1);
@@ -110,6 +119,52 @@ char PS2::GetChar() {
   case 0x0D: return '=';
   case 0x0E: return '\b';
   case 0x0F: return '\t';
+  case 0x10: return PS2::GetLetter('q');
+  case 0x11: return PS2::GetLetter('w');
+  case 0x12: return PS2::GetLetter('e');
+  case 0x13: return PS2::GetLetter('r');
+  case 0x14: return PS2::GetLetter('t');
+  case 0x15: return PS2::GetLetter('y');
+  case 0x16: return PS2::GetLetter('u');
+  case 0x17: return PS2::GetLetter('i');
+  case 0x18: return PS2::GetLetter('o');
+  case 0x19: return PS2::GetLetter('p');
+  case 0x1A: return '[';
+  case 0x1B: return ']';
+  case 0x1C: return '\n';
+  //...
+  case 0x1E: return PS2::GetLetter('a');
+  case 0x1F: return PS2::GetLetter('s');
+  case 0x20: return PS2::GetLetter('d');
+  case 0x21: return PS2::GetLetter('f');
+  case 0x22: return PS2::GetLetter('g');
+  case 0x23: return PS2::GetLetter('h');
+  case 0x24: return PS2::GetLetter('j');
+  case 0x25: return PS2::GetLetter('k');
+  case 0x26: return PS2::GetLetter('l');
+  case 0x27: return PS2::GetLetter(';');
+  case 0x28: return PS2::GetLetter('\'');
+  case 0x29: return PS2::GetLetter('`');
+  case 0x2A: PS2::shift = true;  return PS2::GetChar();
+  case 0x2B: return PS2::GetLetter('\\');
+  case 0x2C: return PS2::GetLetter('z');
+  case 0x2D: return PS2::GetLetter('x');
+  case 0x2E: return PS2::GetLetter('c');
+  case 0x2F: return PS2::GetLetter('v');
+  case 0x30: return PS2::GetLetter('b');
+  case 0x31: return PS2::GetLetter('n');
+  case 0x32: return PS2::GetLetter('m');
+  case 0x33: return ',';
+  case 0x34: return '.';
+  case 0x35: return '/';
+  case 0x36: PS2::shift = true;  return PS2::GetChar();
+  case 0x37: return '*';
+  //...
+  case 0x39: return ' ';
+  //...
+  case 0xAB: PS2::shift = false; return PS2::GetChar();
+  //...
+  case 0xB6: PS2::shift = false; return PS2::GetChar();
   default: return PS2::GetChar();
   }
 }
