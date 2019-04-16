@@ -12,15 +12,21 @@ struct VgaChar {
   uint8_t blink : 1;
 } __attribute__((__packed__));
 
-void VgaConsole::Scroll() {
+bool VgaConsole::Scroll() {
   if(VgaConsole::pos < VgaConsole::cols * VgaConsole::rows) {
-    return;
+    return false;
   }
 
   struct VgaChar* c = (struct VgaChar*) VGA_BUF_START;
-  memcpy(c, c+VgaConsole::cols, VgaConsole::cols);
+  memcpy(c, c + VgaConsole::cols, VgaConsole::cols*(VgaConsole::rows-1) * sizeof(struct VgaChar));
 
-  VgaConsole::pos = (VgaConsole::cols - 1) * VgaConsole::rows;
+  VgaConsole::pos = VgaConsole::cols * (VgaConsole::rows-1);
+
+  for(int i = VgaConsole::pos; i < VgaConsole::pos + VgaConsole::cols; i++) {
+    c[i].cp = ' ';
+  }
+
+  return true;
 }
 
 void VgaConsole::PrintChar(char in) {
@@ -28,8 +34,8 @@ void VgaConsole::PrintChar(char in) {
 
   switch(in) {
   case '\n':
-    VgaConsole::Scroll();
     VgaConsole::pos += VgaConsole::cols - VgaConsole::pos % VgaConsole::cols;
+    VgaConsole::Scroll();
     break;
   case '\b':
     VgaConsole::pos--;
@@ -38,11 +44,14 @@ void VgaConsole::PrintChar(char in) {
     VgaConsole::pos = VgaConsole::pos - VgaConsole::pos % VgaConsole::cols;
     break;
   default:
-    VgaConsole::Scroll();
+    // VgaConsole::Scroll();
     c[VgaConsole::pos].blink = 0;
     c[VgaConsole::pos].bg_color = Color::Black;
     c[VgaConsole::pos].fg_color = Color::White;
     c[VgaConsole::pos].cp = in;
     VgaConsole::pos++;
+    if (VgaConsole::pos >= VgaConsole::cols * VgaConsole::rows) {
+      VgaConsole::pos = VgaConsole::cols * (VgaConsole::rows-1);
+    }
   }
 }

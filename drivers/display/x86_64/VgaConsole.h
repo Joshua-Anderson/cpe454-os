@@ -8,7 +8,7 @@ public:
   void PrintChar(char);
 
 private:
-  void Scroll();
+  bool Scroll();
 
   static const int rows = 25;
   static const int cols = 80;

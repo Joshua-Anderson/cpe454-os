@@ -33,6 +33,10 @@ all: $(KERNEL)
 run: $(IMG)
 	qemu-system-x86_64 -drive format=raw,file=out/sol.img
 
+.PHONY: debug
+debug: $(IMG)
+	qemu-system-x86_64 -s -drive format=raw,file=out/sol.img
+
 .PHONY: clean
 clean:
 	rm -rf out
