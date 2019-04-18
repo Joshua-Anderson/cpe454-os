@@ -6,8 +6,7 @@
 
 extern "C" {
 
-int printk_generic(Display* disp, const char *fmt, va_list* argp);
-
+int printk_generic(Display* disp, const char* fmt, va_list* argp);
 }
 
 #endif

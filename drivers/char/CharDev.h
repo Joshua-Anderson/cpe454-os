@@ -2,7 +2,7 @@
 #define _CHAR_DEV_H__
 
 class CharDev {
-public:
+ public:
   virtual void Init() = 0;
   virtual char GetChar() = 0;
 };

@@ -4,10 +4,10 @@
 #include "../Display.h"
 
 class VgaConsole : public Display {
-public:
+ public:
   void PrintChar(char);
 
-private:
+ private:
   bool Scroll();
 
   static const int rows = 25;

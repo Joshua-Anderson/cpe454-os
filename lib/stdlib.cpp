@@ -1,10 +1,10 @@
-#include <stdint.h>
 #include "stdlib.h"
+#include <stdint.h>
 
 void *memset(void *dst, int c, size_t n) {
   char *tmp = (char *)dst;
   for (size_t i = 0; i < n; i++) {
-    tmp[i] = (char) c;
+    tmp[i] = (char)c;
   }
 
   return dst;
@@ -20,7 +20,7 @@ void *memcpy(void *dst, const void *src, size_t n) {
 
 size_t strlen(const char *s) {
   size_t len = 0;
-  while(*s != 0) {
+  while (*s != 0) {
     len++;
     s += 1;
   }

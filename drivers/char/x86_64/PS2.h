@@ -4,11 +4,11 @@
 #include "../CharDev.h"
 
 class PS2 : public CharDev {
-public:
+ public:
   void Init();
   char GetChar();
 
-private:
+ private:
   bool shift = false;
 
   char GetLetter(char c);
