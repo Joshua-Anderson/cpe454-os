@@ -2,7 +2,7 @@
 #define _IRQ_H__
 
 class IRQ {
-public:
+ public:
   static void Init();
   static void Enable();
   static void Disable();

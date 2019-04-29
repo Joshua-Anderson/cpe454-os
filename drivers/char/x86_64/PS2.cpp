@@ -1,5 +1,6 @@
-#include "PS2.h"
 #include <stdint.h>
+
+#include "PS2.h"
 #include "arch/x86_64/arch.h"
 
 #define PS2_DATA_REG 0x60
@@ -70,6 +71,7 @@ void PS2::Init() {
   struct PS2_CtrlCfg* ctrl_cfg = (struct PS2_CtrlCfg*)&data_reg;
 
   // Enable clock for keyboard
+  ctrl_cfg->p1_intr = 1;
   ctrl_cfg->p1_clk = 1;
 
   outb(PS2_CMD_REG, PS2_CMD_CTRL_CFG_W);

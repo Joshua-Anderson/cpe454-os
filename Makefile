@@ -2,7 +2,9 @@ ARCH ?= x86_64
 CROSS_CPP ?= /usr/local/454-cross/bin/x86_64-elf-g++
 CROSS_LD ?= /usr/local/454-cross/bin/x86_64-elf-ld
 
-override CPPFLAGS+=-Wall -Wextra -Werror -ffreestanding -fno-exceptions -fno-rtti -lgcc -I$(PWD) -Ilib -Ilib/$(ARCH)
+ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+
+override CPPFLAGS+=-Wall -Wextra -Werror -ffreestanding -fno-exceptions -fno-rtti -lgcc -I$(ROOT_DIR) -Ilib -Ilib/$(ARCH)
 
 ifeq ($(DEBUG),y)
    override CPPFLAGS+=-g
@@ -19,11 +21,13 @@ ASM_OBJ := $(patsubst arch/$(ARCH)/%.asm, \
 C_HDR := $(wildcard arch/$(ARCH)/*.h \
 					lib/*.h lib/$(ARCH)/*.h \
 					drivers/display/*.h drivers/display/$(ARCH)/*.h \
-					drivers/char/*.h drivers/char/$(ARCH)/*.h)
+					drivers/char/*.h drivers/char/$(ARCH)/*.h \
+					irq/*.h)
 C_SRC := $(wildcard arch/$(ARCH)/*.cpp \
 					init/*.cpp lib/*.cpp lib/$(ARCH)/*.cpp \
 					drivers/display/$(ARCH)/*.cpp \
-					drivers/char/$(ARCH)/*.cpp)
+					drivers/char/$(ARCH)/*.cpp \
+					irq/$(ARCH)/*.cpp)
 C_OBJ := $(patsubst %.cpp, out/%.o, $(C_SRC))
 
 LD_SCRIPT := arch/$(ARCH)/linker.ld
@@ -84,5 +88,9 @@ out/drivers/display/$(ARCH)/%.o: drivers/display/$(ARCH)/%.cpp
 	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
 
 out/drivers/char/$(ARCH)/%.o: drivers/char/$(ARCH)/%.cpp
+	@mkdir -p $(shell dirname $@)
+	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
+
+out/irq/$(ARCH)/%.o: irq/$(ARCH)/%.cpp
 	@mkdir -p $(shell dirname $@)
 	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
