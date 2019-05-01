@@ -67,7 +67,7 @@ irq_pre_handler:
   pop rcx
   pop rbx
   pop rax
-  iret
+  iretq
 
 irq_handle_wo_code 0
 irq_handle_wo_code 1

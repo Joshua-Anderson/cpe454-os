@@ -6,8 +6,8 @@ class IRQ {
   static void Init();
   static void Enable();
   static void Disable();
-  static char SetMask(int);
-  static char ClearMask(int);
+  static void SetMask(int);
+  static void ClearMask(int);
 };
 
 #endif

@@ -12,9 +12,10 @@
 
 #define PIC_INIT 0x11
 #define ICW4_8086 0x01
+#define IRQ_ACK 0x20
 
 #define PIC_MASTER_OFFSET 32
-#define PIC_SLAVE_OFFSET 47
+#define PIC_SLAVE_OFFSET 40
 
 #define TYPE_IRQ 0xE
 #define TYPE_TRAP 0xF
@@ -107,16 +108,43 @@ static inline void init_idt(struct IDT_entry *idt, void (*handler)(void),
   idt->p = 1;
 }
 
-extern "C" void irq_handler() {
-  int num, err;
-  asm volatile("movl %%edi, %0" : "=rm"(num) :);
-  asm volatile("movl %%esi, %0" : "=rm"(err) :);
-  printk("IRQ %d Called (Err %d)!\n", num, err);
+extern "C" void irq_handler(uint32_t num, uint32_t err) {
+  printk("IRQ %u Called (Err %u)!\n", num, err);
+
+  // Acknowledge Interrupts
+  outb(PIC_MASTER_CMD_REG, IRQ_ACK);
+  if(num > 7) {
+    outb(PIC_SLAVE_CMD_REG, IRQ_ACK);
+  }
 }
 
 void IRQ::Enable() { asm volatile("sti" : :); }
 
 void IRQ::Disable() { asm volatile("cli" : :); }
+
+void IRQ::SetMask(int irq) {
+  uint16_t port = PIC_MASTER_DATA_REG;
+  int phy_irq = irq - PIC_MASTER_OFFSET;
+  if(phy_irq > 7) {
+    port = PIC_SLAVE_DATA_REG;
+    phy_irq -= 8;
+  }
+
+  uint8_t val = inb(port) | (1 << phy_irq);
+  outb(port, val);
+}
+
+void IRQ::ClearMask(int irq) {
+  uint16_t port = PIC_MASTER_DATA_REG;
+  int phy_irq = irq - PIC_MASTER_OFFSET;
+  if(phy_irq > 7) {
+    port = PIC_SLAVE_DATA_REG;
+    phy_irq -= 8;
+  }
+
+  uint8_t val = inb(port) & ~(1 << phy_irq);
+  outb(port, val);
+}
 
 void IRQ::Init() {
   memset(IDT, 0, sizeof(struct IDT_entry) * IDT_SIZE);
@@ -183,9 +211,6 @@ void IRQ::Init() {
 
   outb(PIC_MASTER_DATA_REG, ICW4_8086);
   outb(PIC_SLAVE_DATA_REG, ICW4_8086);
-
-  outb(PIC_MASTER_DATA_REG, 0);
-  outb(PIC_SLAVE_DATA_REG, 0);
 
   load_idt(IDT, sizeof(struct IDT_entry) * (IDT_SIZE - 1));
   IRQ::Enable();
