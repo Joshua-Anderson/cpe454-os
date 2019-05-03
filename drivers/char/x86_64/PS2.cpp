@@ -2,6 +2,8 @@
 
 #include "PS2.h"
 #include "arch/x86_64/arch.h"
+#include "printk.h"
+#include "irq/IRQ.h"
 
 #define PS2_DATA_REG 0x60
 #define PS2_CMD_REG 0x64
@@ -15,6 +17,8 @@
 #define PS2_CMD_CTRL_CFG_W 0x60
 
 #define PS2_DEV_RST 0xFF
+
+#define PS2_IRQ 33
 
 struct PS2_StatusReg {
   uint8_t outb : 1;
@@ -56,6 +60,10 @@ static inline void poll_ps2_inb(uint8_t val) {
   }
 }
 
+void PS2_irq_handler(unsigned int, unsigned int) {
+  printk("Keyboard interrupt\n");
+}
+
 void PS2::Init() {
   // Disable both PS2 channels
   outb(PS2_CMD_REG, PS2_CMD_DISABLE_P1);
@@ -70,7 +78,7 @@ void PS2::Init() {
   uint8_t data_reg = inb(PS2_DATA_REG);
   struct PS2_CtrlCfg* ctrl_cfg = (struct PS2_CtrlCfg*)&data_reg;
 
-  // Enable clock for keyboard
+  // Enable clock and interrupt for keyboard
   ctrl_cfg->p1_intr = 1;
   ctrl_cfg->p1_clk = 1;
 
@@ -82,6 +90,9 @@ void PS2::Init() {
   outb(PS2_CMD_REG, PS2_CMD_ENABLE_P1);
   poll_ps2_inb(0);
   outb(PS2_DATA_REG, PS2_DEV_RST);
+
+  IRQ::Register(PS2_IRQ, PS2_irq_handler);
+  IRQ::ClearMask(PS2_IRQ);
 }
 
 char PS2::GetLetter(char c) {

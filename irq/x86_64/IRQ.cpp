@@ -86,6 +86,8 @@ struct IDT_entry {
 
 struct IDT_entry IDT[IDT_SIZE];
 
+void (*IRQ_handlers[IDT_SIZE])(unsigned int, unsigned int);
+
 static inline void load_idt(struct IDT_entry *idt, uint16_t size) {
   struct {
     uint16_t limit;
@@ -109,7 +111,13 @@ static inline void init_idt(struct IDT_entry *idt, void (*handler)(void),
 }
 
 extern "C" void irq_handler(uint32_t num, uint32_t err) {
-  printk("IRQ %u Called (Err %u)!\n", num, err);
+
+  if(!IRQ_handlers[num]) {
+    printk("ERROR: Unhandled IRQ %u Called (Err %u)!\n", num, err);
+    asm volatile("hlt" : :);
+  }
+
+  IRQ_handlers[num](num, err);
 
   // Acknowledge Interrupts
   outb(PIC_MASTER_CMD_REG, IRQ_ACK);
@@ -146,8 +154,18 @@ void IRQ::ClearMask(int irq) {
   outb(port, val);
 }
 
+void irq_maskall() {
+  outb(PIC_MASTER_DATA_REG, 0b10111111);
+  outb(PIC_MASTER_DATA_REG, 0xF);
+}
+
+void IRQ::Register(int num, void (*hndlr)(unsigned int, unsigned int)) {
+  IRQ_handlers[num] = hndlr;
+}
+
 void IRQ::Init() {
   memset(IDT, 0, sizeof(struct IDT_entry) * IDT_SIZE);
+  memset(IDT, 0, sizeof(IRQ_handlers));
 
   init_idt(&IDT[1], irq_1, 0x8, TYPE_IRQ, 0);
   init_idt(&IDT[2], irq_2, 0x8, TYPE_IRQ, 0);
@@ -211,6 +229,8 @@ void IRQ::Init() {
 
   outb(PIC_MASTER_DATA_REG, ICW4_8086);
   outb(PIC_SLAVE_DATA_REG, ICW4_8086);
+
+  irq_maskall();
 
   load_idt(IDT, sizeof(struct IDT_entry) * (IDT_SIZE - 1));
   IRQ::Enable();

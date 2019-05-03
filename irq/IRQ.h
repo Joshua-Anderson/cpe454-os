@@ -8,6 +8,7 @@ class IRQ {
   static void Disable();
   static void SetMask(int);
   static void ClearMask(int);
+  static void Register(int, void (*hndlr)(unsigned int, unsigned int));
 };
 
 #endif

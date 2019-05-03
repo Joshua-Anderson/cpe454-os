@@ -7,6 +7,7 @@ class PS2 : public CharDev {
  public:
   void Init();
   char GetChar();
+  char GetCharIRQ();
 
  private:
   bool shift = false;
