@@ -1,9 +1,11 @@
 #include "../IRQ.h"
+#include "arch/x86_64/GDT.h"
 #include "arch/x86_64/arch.h"
 #include "printk.h"
 #include "stdlib.h"
 
 #define IDT_SIZE 256
+#define EXCEPTION_STACK_SIZE 1024
 
 #define PIC_MASTER_CMD_REG 0x20
 #define PIC_MASTER_DATA_REG 0x21
@@ -71,10 +73,15 @@ extern void irq_46(void);
 extern void irq_47(void);
 }
 
+uint8_t gp_stack[EXCEPTION_STACK_SIZE];
+uint8_t df_stack[EXCEPTION_STACK_SIZE];
+uint8_t pf_stack[EXCEPTION_STACK_SIZE];
+
 struct IDT_entry {
   uint16_t tar_offset_1;
   uint16_t tar_sel;
-  uint8_t res_1;
+  uint8_t ist : 3;
+  uint8_t res_1 : 5;
   uint8_t type : 4;
   uint8_t zero : 1;
   uint8_t dpl : 2;
@@ -111,9 +118,8 @@ static inline void init_idt(struct IDT_entry *idt, void (*handler)(void),
 }
 
 extern "C" void irq_handler(uint32_t num, uint32_t err) {
-
-  if(!IRQ_handlers[num]) {
-    printk("ERROR: Unhandled IRQ %u Called (Err %u)!\n", num, err);
+  if (!IRQ_handlers[num]) {
+    printk("FATAL: Unhandled IRQ %u Called (Err %u)!\n", num, err);
     asm volatile("hlt" : :);
   }
 
@@ -121,7 +127,7 @@ extern "C" void irq_handler(uint32_t num, uint32_t err) {
 
   // Acknowledge Interrupts
   outb(PIC_MASTER_CMD_REG, IRQ_ACK);
-  if(num > 7) {
+  if (num > 7) {
     outb(PIC_SLAVE_CMD_REG, IRQ_ACK);
   }
 }
@@ -133,7 +139,7 @@ void IRQ::Disable() { asm volatile("cli" : :); }
 void IRQ::SetMask(int irq) {
   uint16_t port = PIC_MASTER_DATA_REG;
   int phy_irq = irq - PIC_MASTER_OFFSET;
-  if(phy_irq > 7) {
+  if (phy_irq > 7) {
     port = PIC_SLAVE_DATA_REG;
     phy_irq -= 8;
   }
@@ -145,7 +151,7 @@ void IRQ::SetMask(int irq) {
 void IRQ::ClearMask(int irq) {
   uint16_t port = PIC_MASTER_DATA_REG;
   int phy_irq = irq - PIC_MASTER_OFFSET;
-  if(phy_irq > 7) {
+  if (phy_irq > 7) {
     port = PIC_SLAVE_DATA_REG;
     phy_irq -= 8;
   }
@@ -214,6 +220,14 @@ void IRQ::Init() {
   init_idt(&IDT[45], irq_45, 0x8, TYPE_IRQ, 0);
   init_idt(&IDT[46], irq_46, 0x8, TYPE_IRQ, 0);
   init_idt(&IDT[47], irq_47, 0x8, TYPE_IRQ, 0);
+
+  // Setup independant stacks for special processor execeptions
+  IDT[DF_FAULT].ist = 1;
+  GDT::LoadIST(1, &df_stack);
+  IDT[GP_FAULT].ist = 2;
+  GDT::LoadIST(2, &gp_stack);
+  IDT[PF_FAULT].ist = 3;
+  GDT::LoadIST(3, &pf_stack);
 
   // Start Initializing PIC
   outb(PIC_MASTER_CMD_REG, PIC_INIT);

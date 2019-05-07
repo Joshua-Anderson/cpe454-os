@@ -1,5 +1,5 @@
-#ifndef _IRQ_H__
-#define _IRQ_H__
+#ifndef __IRQ_H__
+#define __IRQ_H__
 
 class IRQ {
  public:

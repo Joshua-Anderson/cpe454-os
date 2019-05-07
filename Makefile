@@ -18,7 +18,8 @@ ASM_SRC := $(wildcard arch/$(ARCH)/*.asm)
 ASM_OBJ := $(patsubst arch/$(ARCH)/%.asm, \
 	out/arch/$(ARCH)/%.o, $(ASM_SRC))
 
-C_HDR := $(wildcard arch/$(ARCH)/*.h \
+C_HDR := $(wildcard arch/*.h \
+					arch/$(ARCH)/*.h \
 					lib/*.h lib/$(ARCH)/*.h \
 					drivers/display/*.h drivers/display/$(ARCH)/*.h \
 					drivers/char/*.h drivers/char/$(ARCH)/*.h \

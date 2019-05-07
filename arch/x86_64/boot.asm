@@ -142,7 +142,6 @@ error:
 section .rodata
 gdt64:
   dq 0 ; zero entry
-  dq (1<<43) | (1<<44) | (1<<47) | (1<<53) ; code segment
 .code: equ $ - gdt64 ; new
   dq (1<<43) | (1<<44) | (1<<47) | (1<<53) ; code segment
 .pointer:

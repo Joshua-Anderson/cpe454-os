@@ -2,8 +2,8 @@
 
 #include "PS2.h"
 #include "arch/x86_64/arch.h"
-#include "printk.h"
 #include "irq/IRQ.h"
+#include "printk.h"
 
 #define PS2_DATA_REG 0x60
 #define PS2_CMD_REG 0x64
@@ -17,8 +17,6 @@
 #define PS2_CMD_CTRL_CFG_W 0x60
 
 #define PS2_DEV_RST 0xFF
-
-#define PS2_IRQ 33
 
 struct PS2_StatusReg {
   uint8_t outb : 1;
