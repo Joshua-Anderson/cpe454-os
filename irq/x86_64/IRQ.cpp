@@ -223,11 +223,11 @@ void IRQ::Init() {
 
   // Setup independant stacks for special processor execeptions
   IDT[DF_FAULT].ist = 1;
-  GDT::LoadIST(1, &df_stack);
+  GDT::LoadIST(1, &df_stack[sizeof(df_stack)-1]);
   IDT[GP_FAULT].ist = 2;
-  GDT::LoadIST(2, &gp_stack);
+  GDT::LoadIST(2, &gp_stack[sizeof(gp_stack)-1]);
   IDT[PF_FAULT].ist = 3;
-  GDT::LoadIST(3, &pf_stack);
+  GDT::LoadIST(3, &pf_stack[sizeof(pf_stack)-1]);
 
   // Start Initializing PIC
   outb(PIC_MASTER_CMD_REG, PIC_INIT);

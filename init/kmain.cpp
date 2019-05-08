@@ -13,6 +13,9 @@ void kmain() {
   ps2.GetChar();
   ps2.Init();
 
+  int test = *((int *)0xFFFFFFFFFFFFFFFF);
+  test++;
+
   printk("Raw Keyboard Input: ");
 
   while (1) {
