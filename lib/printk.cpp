@@ -1,6 +1,8 @@
-#include "printk_generic.h"
 #include <stdarg.h>
+
+#include "printk.h"
 #include "stdlib.h"
+#include "arch/ArchInit.h"
 
 static void reverse(char s[]) {
   for (int i = 0, j = strlen(s) - 1; i < j; i++, j--) {
@@ -61,7 +63,9 @@ static void printk_int(Display *disp, long i, int base) {
   printk_uint(disp, (unsigned long)i, base);
 }
 
-int printk_generic(Display *disp, const char *fmt, va_list *argp) {
+int print_disp(Display *disp, const char *fmt, ...) {
+  va_list argp;
+  va_start(argp, fmt);
   const char *tmp = fmt;
 
   while (*tmp != 0) {
@@ -73,23 +77,23 @@ int printk_generic(Display *disp, const char *fmt, va_list *argp) {
             disp->PrintChar('%');
             break;
           case 'c':
-            disp->PrintChar((char)va_arg(*argp, int));
+            disp->PrintChar((char)va_arg(argp, int));
             break;
           case 'd':
-            printk_int(disp, va_arg(*argp, int), 10);
+            printk_int(disp, va_arg(argp, int), 10);
             break;
           case 'h':
             tmp++;
             switch (*tmp) {
               case 'd':
-                printk_int(disp, (short)va_arg(*argp, int), 10);
+                printk_int(disp, (short)va_arg(argp, int), 10);
                 break;
               case 'u':
-                printk_uint(disp, (unsigned short)va_arg(*argp, unsigned int),
+                printk_uint(disp, (unsigned short)va_arg(argp, unsigned int),
                             10);
                 break;
               case 'x':
-                printk_uint(disp, (unsigned short)va_arg(*argp, unsigned int),
+                printk_uint(disp, (unsigned short)va_arg(argp, unsigned int),
                             16);
                 break;
               default:
@@ -100,29 +104,29 @@ int printk_generic(Display *disp, const char *fmt, va_list *argp) {
             tmp++;
             switch (*tmp) {
               case 'd':
-                printk_int(disp, va_arg(*argp, long), 10);
+                printk_int(disp, va_arg(argp, long), 10);
                 break;
               case 'u':
-                printk_uint(disp, va_arg(*argp, unsigned long), 10);
+                printk_uint(disp, va_arg(argp, unsigned long), 10);
                 break;
               case 'x':
-                printk_uint(disp, va_arg(*argp, unsigned long), 16);
+                printk_uint(disp, va_arg(argp, unsigned long), 16);
                 break;
               default:
                 disp->PrintChar('?');
             }
             break;
           case 'p':
-            printk_uint(disp, (unsigned long)va_arg(*argp, void *), 16);
+            printk_uint(disp, (unsigned long)va_arg(argp, void *), 16);
             break;
           case 's':
-            printk_str(disp, va_arg(*argp, char *));
+            printk_str(disp, va_arg(argp, char *));
             break;
           case 'u':
-            printk_uint(disp, va_arg(*argp, unsigned int), 10);
+            printk_uint(disp, va_arg(argp, unsigned int), 10);
             break;
           case 'x':
-            printk_uint(disp, va_arg(*argp, unsigned int), 16);
+            printk_uint(disp, va_arg(argp, unsigned int), 16);
             break;
           default:
             disp->PrintChar('?');
@@ -133,5 +137,8 @@ int printk_generic(Display *disp, const char *fmt, va_list *argp) {
     }
     tmp++;
   }
+
+  va_end(argp);
   return 0;
 }
+

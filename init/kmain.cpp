@@ -1,5 +1,4 @@
 #include "drivers/char/x86_64/PS2.h"
-#include "drivers/display/x86_64/SerialConsole.h"
 #include "arch/ArchInit.h"
 #include "irq/IRQ.h"
 #include "printk.h"
@@ -15,13 +14,10 @@ void kmain() {
   ps2.Init();
 
 
-  SerialConsole console = SerialConsole();
-  int i = 0;
-  while(1) {
-    console.PrintChar('a' + i);
-    console.PrintChar('\n');
-    i = (i+1)%25;
-  }
+  printk("Display only...\n");
+  printc("Console only...\n");
+  printa("Both...\n");
+  printa("Really long test testing testing one two three four...\n");
 
   // int test = *((int *)0xFFFFFFFFFFFFFFFF);
   // test++;

@@ -4,7 +4,7 @@ CROSS_LD ?= /usr/local/454-cross/bin/x86_64-elf-ld
 
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
-override CPPFLAGS+=-Wall -Wextra -Werror -ffreestanding -fno-exceptions -fno-rtti -lgcc -I$(ROOT_DIR) -Ilib -Ilib/$(ARCH)
+override CPPFLAGS+=-Wall -Wextra -Werror -ffreestanding -fno-exceptions -fno-threadsafe-statics -fno-rtti -lgcc -I$(ROOT_DIR) -Ilib -Ilib/$(ARCH)
 override QEMUFLAGS+=-serial stdio
 
 ifeq ($(DEBUG),y)
@@ -22,12 +22,12 @@ ASM_OBJ := $(patsubst arch/$(ARCH)/%.asm, \
 
 C_HDR := $(wildcard arch/*.h \
 					arch/$(ARCH)/*.h \
-					lib/*.h lib/$(ARCH)/*.h \
+					lib/*.h \
 					drivers/display/*.h drivers/display/$(ARCH)/*.h \
 					drivers/char/*.h drivers/char/$(ARCH)/*.h \
 					irq/*.h)
 C_SRC := $(wildcard arch/$(ARCH)/*.cpp \
-					init/*.cpp lib/*.cpp lib/$(ARCH)/*.cpp \
+					init/*.cpp lib/*.cpp \
 					drivers/display/$(ARCH)/*.cpp \
 					drivers/char/$(ARCH)/*.cpp \
 					irq/$(ARCH)/*.cpp)
@@ -77,10 +77,6 @@ out/init/%.o: init/%.cpp
 out/lib/%.o: lib/%.cpp
 	@mkdir -p $(shell dirname $@)
 	$(CROSS_CPP) $(CPPFLAGS) -Wno-builtin-declaration-mismatch -c $< -o $@
-
-out/lib/$(ARCH)/%.o: lib/$(ARCH)/%.cpp
-	@mkdir -p $(shell dirname $@)
-	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
 
 out/drivers/display/$(ARCH)/%.o: drivers/display/$(ARCH)/%.cpp
 	@mkdir -p $(shell dirname $@)

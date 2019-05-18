@@ -88,8 +88,6 @@ inline void serial_tx(char c) {
 }
 
 void serial_irq_handler(unsigned int, unsigned int) {
-  printk("Serial interrupt\n");
-
   uint8_t iir_dat = inb(SERIAL_II_REG);
   struct IIR* iir = (struct IIR*) &iir_dat;
 
