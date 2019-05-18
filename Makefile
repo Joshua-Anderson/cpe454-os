@@ -5,9 +5,11 @@ CROSS_LD ?= /usr/local/454-cross/bin/x86_64-elf-ld
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 override CPPFLAGS+=-Wall -Wextra -Werror -ffreestanding -fno-exceptions -fno-rtti -lgcc -I$(ROOT_DIR) -Ilib -Ilib/$(ARCH)
+override QEMUFLAGS+=-serial stdio
 
 ifeq ($(DEBUG),y)
    override CPPFLAGS+=-g
+   override QEMUFLAGS+=-s
 endif
 
 KERNEL := out/sol.bin
@@ -38,11 +40,7 @@ all: $(KERNEL)
 
 .PHONY: run
 run: $(IMG)
-	qemu-system-x86_64 -drive format=raw,file=out/sol.img
-
-.PHONY: debug
-debug: $(IMG)
-	qemu-system-x86_64 -s -drive format=raw,file=out/sol.img
+	qemu-system-x86_64 -drive format=raw,file=out/sol.img $(QEMUFLAGS)
 
 .PHONY: clean
 clean:

@@ -161,7 +161,7 @@ void IRQ::ClearMask(int irq) {
 }
 
 void irq_maskall() {
-  outb(PIC_MASTER_DATA_REG, 0b10111111);
+  outb(PIC_MASTER_DATA_REG, 0b11011111);
   outb(PIC_MASTER_DATA_REG, 0xF);
 }
 

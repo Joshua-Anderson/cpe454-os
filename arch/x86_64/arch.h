@@ -8,6 +8,7 @@
 #define PF_FAULT 0xE
 
 #define PS2_IRQ 33
+#define SERIAL_IRQ 36
 
 extern "C" {
 
