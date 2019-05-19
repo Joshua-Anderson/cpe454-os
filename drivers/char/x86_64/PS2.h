@@ -1,11 +1,11 @@
 #ifndef _PS2_H__
 #define _PS2_H__
 
-#include "../CharDev.h"
+#include "../CharIn.h"
 
-class PS2 : public CharDev {
+class PS2 : public CharIn {
  public:
-  void Init();
+  PS2();
   char GetChar();
   char GetCharIRQ();
 

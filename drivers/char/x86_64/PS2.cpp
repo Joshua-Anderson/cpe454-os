@@ -74,7 +74,7 @@ void PS2_irq_handler(unsigned int, unsigned int) {
   }
 }
 
-void PS2::Init() {
+PS2::PS2() {
   // Disable both PS2 channels
   outb(PS2_CMD_REG, PS2_CMD_DISABLE_P1);
   outb(PS2_CMD_REG, PS2_CMD_DISABLE_P2);

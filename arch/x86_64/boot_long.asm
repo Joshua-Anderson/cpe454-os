@@ -5,13 +5,15 @@ section .text
 bits 64
 long_mode_start:
     ; load 0 into all data segment registers
-    mov ax, 0
-    mov ss, ax
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
+    mov dx, 0
+    mov ss, dx
+    mov ds, dx
+    mov es, dx
+    mov fs, dx
+    mov gs, dx
 
     ; start kernel c code
+    mov edi, eax
+    mov esi, ebx
     call kmain
     hlt

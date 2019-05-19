@@ -117,7 +117,7 @@ int print_disp(Display *disp, const char *fmt, ...) {
             }
             break;
           case 'p':
-            printk_uint(disp, (unsigned long)va_arg(argp, void *), 16);
+            printk_uint(disp, (intptr_t )va_arg(argp, void *), 16);
             break;
           case 's':
             printk_str(disp, va_arg(argp, char *));

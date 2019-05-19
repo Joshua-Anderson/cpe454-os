@@ -6,6 +6,10 @@ bits 32
 start:
   mov esp, stack_top
 
+  ; Save Multiboot registers
+  push eax
+  push ebx
+
   ; check for multiboot kernel and cpu long mode support
   call check_multiboot
   call check_cpuid
@@ -13,6 +17,9 @@ start:
 
   call set_up_page_tables
   call enable_paging
+
+  pop ebx
+  pop eax
 
   ; load the 64-bit GDT
   lgdt [gdt64.pointer]

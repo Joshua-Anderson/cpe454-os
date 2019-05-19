@@ -14,4 +14,5 @@ void ArchInit::Init() {
   INIT("TSS ", GDT::InitTSS());
   INIT("IRQs", IRQ::Init());
   INIT("UART", Platform::GetDflConsole());
+  INIT("KBD ", Platform::GetDflInput());
 }
