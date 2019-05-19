@@ -120,7 +120,7 @@ static inline void init_idt(struct IDT_entry *idt, void (*handler)(void),
 extern "C" void irq_handler(uint32_t num, uint32_t err) {
   if (!IRQ_handlers[num]) {
     printk("FATAL: Unhandled IRQ %u Called (Err %u)!\n", num, err);
-    asm volatile("hlt" : :);
+    while(1) { hlt(); };
   }
 
   IRQ_handlers[num](num, err);

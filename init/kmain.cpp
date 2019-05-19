@@ -10,9 +10,7 @@ void kmain() {
 
   ArchInit::Init();
   PS2 ps2 = PS2();
-  ps2.GetChar();
   ps2.Init();
-
 
   printk("Display only...\n");
   printc("Console only...\n");
@@ -22,10 +20,10 @@ void kmain() {
   // int test = *((int *)0xFFFFFFFFFFFFFFFF);
   // test++;
 
-  // printk("Raw Keyboard Input: ");
+  printk("> ");
 
-  // while (1) {
-  //   printk("%c", ps2.GetChar());
-  // }
+  while (1) {
+     printk("%c", ps2.GetChar());
+  }
   return;
 }

@@ -38,6 +38,13 @@ struct PS2_CtrlCfg {
   uint8_t zero2 : 1;
 } __attribute__((__packed__));
 
+#define BUF_SIZE 4
+#define BUF_INC(v) v = ((v+1) % BUF_SIZE)
+
+static uint8_t buf[BUF_SIZE];
+static volatile int buf_prod = 0;
+static volatile int buf_consumer = 0;
+
 static inline void poll_ps2_outb(uint8_t val) {
   while (1) {
     uint8_t status_reg = inb(PS2_STATUS_REG);
@@ -59,7 +66,12 @@ static inline void poll_ps2_inb(uint8_t val) {
 }
 
 void PS2_irq_handler(unsigned int, unsigned int) {
-  printk("Keyboard interrupt\n");
+  buf[buf_prod] = inb(PS2_DATA_REG);
+  BUF_INC(buf_prod);
+
+  if(buf_prod == buf_consumer) {
+    BUF_INC(buf_consumer);
+  }
 }
 
 void PS2::Init() {
@@ -102,10 +114,22 @@ char PS2::GetLetter(char c) {
 }
 
 char PS2::GetChar() {
-  // Poll into there is something in the output buffer
-  poll_ps2_outb(1);
+  uint8_t val;
 
-  switch (inb(PS2_DATA_REG)) {
+  while(1) {
+    IRQ::Disable();
+    if(buf_consumer != buf_prod) {
+      break;
+    }
+    IRQ::Enable();
+    hlt();
+  }
+
+  val = buf[buf_consumer];
+  BUF_INC(buf_consumer);
+  IRQ::Enable();
+
+  switch (val) {
     case 0x02:
       return '1';
     case 0x03:

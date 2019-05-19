@@ -79,9 +79,9 @@ struct IIR {
 #define BUF_SIZE 256
 #define BUF_INC(v) v = ((v+1) % BUF_SIZE)
 
-char buf[256];
-int buf_prod = 0;
-int buf_consumer = 0;
+static char buf[256];
+static int buf_prod = 0;
+static int buf_consumer = 0;
 
 inline void serial_tx(char c) {
   outb(SERIAL_DATA_REG, c);
