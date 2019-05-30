@@ -4,6 +4,7 @@
 #include "stdlib.h"
 
 #define VGA_BUF_START 0xb8000
+#define TAB_SIZE 4
 
 struct VgaChar {
   char cp;
@@ -40,6 +41,9 @@ void VgaConsole::PrintChar(char in) {
       break;
     case '\b':
       VgaConsole::pos--;
+      break;
+    case '\t':
+      VgaConsole::pos += TAB_SIZE - (VgaConsole::pos % VgaConsole::cols) % TAB_SIZE;
       break;
     case '\r':
       VgaConsole::pos = VgaConsole::pos - VgaConsole::pos % VgaConsole::cols;

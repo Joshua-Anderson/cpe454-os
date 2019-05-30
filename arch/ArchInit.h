@@ -6,7 +6,7 @@
 
 class ArchInit {
  public:
-  static void Init();
+  static void Init(uint32_t mb_magic, void *mb_header);
 };
 
 #endif

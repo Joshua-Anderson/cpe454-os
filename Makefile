@@ -25,12 +25,15 @@ C_HDR := $(wildcard arch/*.h \
 					lib/*.h \
 					drivers/display/*.h drivers/display/$(ARCH)/*.h \
 					drivers/char/*.h drivers/char/$(ARCH)/*.h \
-					irq/*.h)
+					irq/*.h \
+					mm/*.h)
 C_SRC := $(wildcard arch/$(ARCH)/*.cpp \
 					init/*.cpp lib/*.cpp \
 					drivers/display/$(ARCH)/*.cpp \
 					drivers/char/$(ARCH)/*.cpp \
-					irq/$(ARCH)/*.cpp)
+					irq/$(ARCH)/*.cpp \
+					mm/*.cpp)
+
 C_OBJ := $(patsubst %.cpp, out/%.o, $(C_SRC))
 
 LD_SCRIPT := arch/$(ARCH)/linker.ld
@@ -87,5 +90,9 @@ out/drivers/char/$(ARCH)/%.o: drivers/char/$(ARCH)/%.cpp
 	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
 
 out/irq/$(ARCH)/%.o: irq/$(ARCH)/%.cpp
+	@mkdir -p $(shell dirname $@)
+	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
+
+out/mm/%.o: mm/%.cpp
 	@mkdir -p $(shell dirname $@)
 	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
