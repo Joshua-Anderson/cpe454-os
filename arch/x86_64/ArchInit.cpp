@@ -3,6 +3,7 @@
 #include "GDT.h"
 #include "irq/IRQ.h"
 #include "mm/Frame.h"
+#include "mm/Page.h"
 #include "multiboot.h"
 #include "elf.h"
 #include "printk.h"
@@ -103,4 +104,10 @@ void ArchInit::Init(uint32_t mb_magic, void *mb_header) {
   INIT("KBD ", Platform::GetDflInput());
   INIT("MB  ", struct mb_info mbinfo = parse_multiboot(mb_magic, (uint8_t *) mb_header));
   init_mem_regions(&mbinfo);
+
+  // Page::InitIdentityMap();
+  // printa("Ident Map Done\n");
+  // Page p = Page();
+  // p.Load();
+  // printa("Post Page Table Switch\n");
 }

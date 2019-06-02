@@ -1,0 +1,21 @@
+#ifndef __PAGE_H__
+#define __PAGE_H__
+
+#include <stdint.h>
+
+#include "Frame.h"
+
+class Page {
+ public:
+  static const int PAGE_SIZE = Frame::FRAME_SIZE;
+  static void InitIdentityMap();
+
+  Page();
+  void Load();
+  void* Alloc(int region, uint64_t size);
+
+ private:
+    void* PTableLoc;
+};
+
+#endif

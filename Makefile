@@ -32,7 +32,8 @@ C_SRC := $(wildcard arch/$(ARCH)/*.cpp \
 					drivers/display/$(ARCH)/*.cpp \
 					drivers/char/$(ARCH)/*.cpp \
 					irq/$(ARCH)/*.cpp \
-					mm/*.cpp)
+					mm/*.cpp \
+					mm/$(ARCH)/*.cpp)
 
 C_OBJ := $(patsubst %.cpp, out/%.o, $(C_SRC))
 
@@ -94,5 +95,9 @@ out/irq/$(ARCH)/%.o: irq/$(ARCH)/%.cpp
 	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
 
 out/mm/%.o: mm/%.cpp
+	@mkdir -p $(shell dirname $@)
+	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
+
+out/mm/$(ARCH)/%.o: mm/$(ARCH)/%.cpp
 	@mkdir -p $(shell dirname $@)
 	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
