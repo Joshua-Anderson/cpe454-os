@@ -7,7 +7,7 @@
 
 class Page {
  public:
-  static const int PAGE_SIZE = Frame::FRAME_SIZE;
+  static const uint32_t PAGE_SIZE = Frame::FRAME_SIZE;
   static void InitIdentityMap();
 
   Page();

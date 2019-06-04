@@ -32,21 +32,15 @@ struct PTEntry {
 #define PAGE_TABLE_SIZE 512
 
 struct PTEntry identity_p3[PAGE_TABLE_SIZE] __attribute__((aligned(0x1000))) = {};
-struct PTEntry identity_p2[PAGE_TABLE_SIZE][PAGE_TABLE_SIZE] __attribute__((aligned(0x1000))) = {{}};
 void Page::InitIdentityMap() {
   uint64_t addr = 0;
 
   for(int i = 0; i < PAGE_TABLE_SIZE; i++) {
-    identity_p3[i].base = PTR_TO_PTABLE_BASE(&identity_p2[i]);
+    identity_p3[i].base = PTR_TO_PTABLE_BASE(addr);
     identity_p3[i].p = 1;
     identity_p3[i].rw = 1;
-    for(int j = 0; j < PAGE_TABLE_SIZE; j++) {
-      identity_p2[i][j].base = PTR_TO_PTABLE_BASE(addr);
-      identity_p2[i][j].p = 1;
-      identity_p2[i][j].rw = 1;
-      identity_p2[i][j].ps = 1; // Identity table has 2MB entries
-      addr += 0x200000;
-    }
+    identity_p3[i].ps = 1;
+    addr += 0x40000000;
   }
 }
 
