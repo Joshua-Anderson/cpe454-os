@@ -42,6 +42,9 @@ void kmain(uint32_t mb_magic, void *mb_header) {
   int* test = (int*)0x8000000004;
   *test = 42;
   printk("Read from stack %d\n", *test);
+  test = (int*)0x8000000004 + 40096*5;
+  *test = 55;
+  printk("Read from stack again %d\n", *test);
 
   test_page_alloc();
 

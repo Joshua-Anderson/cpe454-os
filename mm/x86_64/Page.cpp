@@ -13,8 +13,6 @@
 //   uint16_t res_3 : 12;
 // } __attribute__((packed));
 
-Page* Page::CurrentPage = NULL;
-
 struct PTEntry {
   uint8_t p : 1;
   uint8_t rw : 1;
@@ -48,13 +46,8 @@ void pf_irq_handler(unsigned int, unsigned int err) {
     hlt();
   }
 
-  Page* p = Page::GetCurrentPage();
-  if(p == NULL) {
-    printk("Fatal Page Fault: No Page Table Loaded\n");
-    hlt();
-  }
-
-  struct PTEntry* ptl4 = (struct PTEntry*) p->GetPageTableLocation();
+  struct PTEntry* ptl4;
+  get_reg("cr3", ptl4);
   uint16_t p1_entry = (fault_addr >> 12) & 0x1FF;
   uint16_t p2_entry = (fault_addr >> (12+9)) & 0x1FF;
   uint16_t p3_entry = (fault_addr >> (12+9+9)) & 0x1FF;
@@ -152,13 +145,4 @@ Page::Page() {
 void Page::Load() {
   set_reg("cr3", (uint64_t) Page::PTableLoc);
   IRQ::Register(PF_FAULT, pf_irq_handler);
-  Page::CurrentPage = this;
-}
-
-Page* Page::GetCurrentPage() {
-  return Page::CurrentPage;
-}
-
-void* Page::GetPageTableLocation() {
-  return Page::PTableLoc;
 }
