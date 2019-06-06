@@ -14,12 +14,15 @@ class Page {
   static uint64_t KernStackOffSet;
   static void* AllocKernStackMem();
   static void InitIdentityMap();
+  static Page* GetCurrentPage();
 
   Page();
   void Load();
   void* Alloc(int region, uint64_t size);
+  void* GetPageTableLocation();
 
  private:
+    static Page* CurrentPage;
     void* PTableLoc;
 };
 

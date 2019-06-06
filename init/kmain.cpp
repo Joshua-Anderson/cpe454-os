@@ -37,8 +37,11 @@ void kmain(uint32_t mb_magic, void *mb_header) {
   p.Load();
   printa("Post Page Table Switch\n");
 
-  // int test = *((int *)0xFFFFFFFFFFFFFFFF);
-  // test++;
+  void * t = Page::AllocKernStackMem();
+  printk("Alloced Stack at %p\n", t);
+  int* test = (int*)0x8000000004;
+  *test = 42;
+  printk("Read from stack %d\n", *test);
 
   test_page_alloc();
 

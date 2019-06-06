@@ -18,7 +18,24 @@
     push r15
     mov edi, %1
     mov esi, [rsp+1024]
-    jmp irq_pre_handler
+    call irq_handler
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rbp
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    add rsp, 8 ; Remove Error Code From Stack
+    iretq
 %endmacro
 
 %macro irq_handle_wo_code 1
@@ -41,33 +58,29 @@
     push r15
     mov edi, %1
     mov esi, 0
-    jmp irq_pre_handler
+    call irq_handler
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rbp
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    iretq
 %endmacro
 
 extern irq_handler
 
 section .text
 bits 64
-
-irq_pre_handler:
-
-  call irq_handler
-  pop r15
-  pop r14
-  pop r13
-  pop r12
-  pop r11
-  pop r10
-  pop r9
-  pop r8
-  pop rbp
-  pop rdi
-  pop rsi
-  pop rdx
-  pop rcx
-  pop rbx
-  pop rax
-  iretq
 
 irq_handle_wo_code 0
 irq_handle_wo_code 1

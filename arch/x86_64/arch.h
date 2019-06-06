@@ -22,6 +22,10 @@ inline uint8_t inb(uint16_t port) {
   return ret;
 }
 
+#define get_reg(reg, var) asm volatile("movq %%" reg ", %0" : "=r"(var) :)
+
+#define set_reg(reg, var) asm ( "movq %0, %%" reg : : "r" (var));
+
 inline void hlt() {
   asm volatile("hlt" : : );
 }
