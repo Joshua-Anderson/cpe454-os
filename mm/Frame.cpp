@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include "Frame.h"
+#include "stdlib.h"
 #include "printk.h"
 
 #define ROUND_UP(num, mult) ((num + mult - 1) / mult) * mult
@@ -104,6 +105,15 @@ void * Frame::Alloc() {
   free_tail = free_tail->prev;
 
   return frame;
+}
+
+void* Frame::AllocZeroed() {
+  void *addr = Frame::Alloc();
+  if(addr) {
+    memset(addr, 0, Frame::FRAME_SIZE);
+  }
+
+  return addr;
 }
 
 void Frame::Free(void *frame) {

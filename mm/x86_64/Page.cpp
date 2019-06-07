@@ -4,15 +4,6 @@
 #include "irq/IRQ.h"
 #include "../Page.h"
 
-// struct CR3_REG {
-//   uint8_t res_1 : 3;
-//   uint8_t pwt : 1;
-//   uint8_t pcd : 1;
-//   uint8_t res_2 : 7;
-//   uint64_t base_1 : 40;
-//   uint16_t res_3 : 12;
-// } __attribute__((packed));
-
 struct PTEntry {
   uint8_t p : 1;
   uint8_t rw : 1;
@@ -29,13 +20,59 @@ struct PTEntry {
   uint8_t nx : 1;
 } __attribute__((packed));
 
+struct PageOffsets {
+  uint16_t l1;
+  uint16_t l2;
+  uint16_t l3;
+  uint16_t l4;
+};
+
+struct PageTableLookup {
+  struct PTEntry* l1;
+  struct PTEntry* l2;
+  struct PTEntry* l3;
+  struct PTEntry* l4;
+};
+
 #define PTR_TO_PTABLE_BASE(x) (((uint64_t) x) >> 12)
-#define LOOKUP_PAGE(x) ((struct PTEntry *) ((uint64_t) x << 12))
+#define PTABLE_BASE_TO_PTR(x) ((struct PTEntry *) ((uint64_t) x << 12))
 
 #define PAGE_TABLE_SIZE 512
 
 struct PTEntry identity_p3[PAGE_TABLE_SIZE] __attribute__((aligned(0x1000))) = {};
 struct PTEntry kern_stack_p3[PAGE_TABLE_SIZE] __attribute__((aligned(0x1000))) = {};
+
+static void addrToPageOffset(void* addr, struct PageOffsets* ptoff) {
+  intptr_t a = (intptr_t) addr;
+  ptoff->l1 = (a >> 12) & 0x1FF;
+  ptoff->l2 = (a >> (12+9)) & 0x1FF;
+  ptoff->l3 = (a >> (12+9+9)) & 0x1FF;
+  ptoff->l4 = (a >> (12+9+9+9)) & 0x1FF;
+}
+
+static void walkPageTable(struct PTEntry* pt, struct PageOffsets* ptoff, struct PageTableLookup* ptlook) {
+  ptlook->l1 = NULL;
+  ptlook->l2 = NULL;
+  ptlook->l3 = NULL;
+
+  ptlook->l4 = &pt[ptoff->l4];
+  if(!ptlook->l4->p) {
+    return;
+  }
+
+  ptlook->l3 = &PTABLE_BASE_TO_PTR(ptlook->l4->base)[ptoff->l3];
+  if(!ptlook->l3->p) {
+    return;
+  }
+
+  ptlook->l2 = &PTABLE_BASE_TO_PTR(ptlook->l3->base)[ptoff->l2];
+  if(!ptlook->l2->p) {
+    return;
+  }
+
+  ptlook->l1 = &PTABLE_BASE_TO_PTR(ptlook->l2->base)[ptoff->l1];
+}
+
 
 void pf_irq_handler(unsigned int, unsigned int err) {
   uint64_t fault_addr;
@@ -46,40 +83,35 @@ void pf_irq_handler(unsigned int, unsigned int err) {
     hlt();
   }
 
-  struct PTEntry* ptl4;
-  get_reg("cr3", ptl4);
-  uint16_t p1_entry = (fault_addr >> 12) & 0x1FF;
-  uint16_t p2_entry = (fault_addr >> (12+9)) & 0x1FF;
-  uint16_t p3_entry = (fault_addr >> (12+9+9)) & 0x1FF;
-  uint16_t p4_entry = (fault_addr >> (12+9+9+9)) & 0x1FF;
-  printk("Page Offset: ptable[%u][%u][%u][%u]\n", p4_entry, p3_entry, p2_entry, p1_entry);
+  struct PTEntry* pt;
+  get_reg("cr3", pt);
 
-  if(ptl4[p4_entry].p == 0) {
-    printk("Fatal Page Fault %lx: VMem segment %u nonexistent (Invalid L4)\n", fault_addr, p4_entry);
+  struct PageOffsets ptoff;
+  addrToPageOffset((void*) fault_addr, &ptoff);
+  printk("Page Offset: ptable[%u][%u][%u][%u]\n", ptoff.l4, ptoff.l3, ptoff.l2, ptoff.l1);
+  struct PageTableLookup ptlook;
+  walkPageTable(pt, &ptoff, &ptlook);
+
+  if(!ptlook.l4->p || !ptlook.l3->p || !ptlook.l2->avl_1 || !ptlook.l1->avl_1) {
+    printk("FATAL: Page fault on unallocated address %lx\n", fault_addr);
     hlt();
   }
 
-  struct PTEntry *ptl3 = LOOKUP_PAGE(ptl4[p4_entry].base);
-  if(ptl3[p3_entry].p == 0) {
-    printk("Fatal Page Fault %lx: VMem segment %u->%u nonexistent (Invalid L3)\n", fault_addr, p4_entry, p3_entry);
-    hlt();
+  if(!ptlook.l2->p) {
+    void * new_frame = Frame::AllocZeroed();
+    ptlook.l2->p = 1;
+    ptlook.l2->base = PTR_TO_PTABLE_BASE(new_frame);
+    struct PTEntry* ptl1 = (struct PTEntry*) new_frame;
+    for(int i = 0; i < PAGE_TABLE_SIZE; i++) {
+      ptl1[i].rw = 1;
+      ptl1[i].avl_1 = 1;
+    }
+    walkPageTable(pt, &ptoff, &ptlook);
   }
 
-  struct PTEntry *ptl2 = LOOKUP_PAGE(ptl3[p3_entry].base);
-  if(ptl2[p2_entry].p == 0) {
-    printk("Fatal Page Fault %lx: VMem segment %u->%u->%u nonexistent (Invalid L2)\n", fault_addr, p4_entry, p3_entry, p2_entry);
-    hlt();
-  }
-
-  struct PTEntry *ptl1 = LOOKUP_PAGE(ptl2[p2_entry].base);
-  if(ptl1[p1_entry].avl_1 == 0) {
-    printk("Fatal Page Fault %lx: VMem segment %u->%u->%u->%u nonexistent (Invalid L1)\n", fault_addr, p4_entry, p3_entry, p2_entry, p1_entry);
-    hlt();
-  }
-
-  void * new_page = Frame::Alloc();
-  ptl1[p1_entry].p = 1;
-  ptl1[p1_entry].base = PTR_TO_PTABLE_BASE(new_page);
+  void * new_frame = Frame::Alloc();
+  ptlook.l1->p = 1;
+  ptlook.l1->base = PTR_TO_PTABLE_BASE(new_frame);
 }
 
 void Page::InitIdentityMap() {
@@ -94,41 +126,80 @@ void Page::InitIdentityMap() {
   }
 }
 
-uint64_t Page::KernStackOffSet = 0;
+#define L1_SIZE 0x200000
+
+static int alloc_virt_4k_chunk(struct PTEntry* pt, void * start, void * end) {
+  if((intptr_t) start % Page::PAGE_SIZE || (intptr_t) end % Page::PAGE_SIZE) {
+    printk("ERROR: Unaligned memory allocation %p->%p\n", start, end);
+    return 1;
+  }
+
+  struct PageOffsets st_off, end_off;
+  addrToPageOffset(start, &st_off);
+  addrToPageOffset(end, &end_off);
+
+  void *pos = start;
+
+  while(pos < end) {
+    struct PageOffsets ptoff;
+    struct PageTableLookup ptlook;
+    addrToPageOffset(pos, &ptoff);
+    walkPageTable(pt, &ptoff, &ptlook);
+
+    if(!ptlook.l4->p) {
+      printk("ERROR: Unalloced Page Table Level 4 Segment %p\n", pos);
+      return 1;
+    }
+
+    if(!ptlook.l3->p) {
+      void * new_frame = Frame::AllocZeroed();
+      ptlook.l3->base = PTR_TO_PTABLE_BASE(new_frame);
+      ptlook.l3->p = 1;
+      ptlook.l3->rw = 1;
+      walkPageTable(pt, &ptoff, &ptlook);
+    }
+
+    if(!ptlook.l2->p) {
+      // Skip Allocating L1 table if it's totally spanned
+      if((uint64_t) end - (uint64_t) pos >= L1_SIZE && ptoff.l1 == 0) {
+        ptlook.l2->avl_1 = 1;
+        pos = (void *) ((intptr_t) pos + L1_SIZE);
+        continue;
+      }
+      void * new_frame = Frame::AllocZeroed();
+      ptlook.l2->base = PTR_TO_PTABLE_BASE(new_frame);
+      ptlook.l2->p = 1;
+      ptlook.l2->rw = 1;
+      ptlook.l2->avl_1 = 1;
+      walkPageTable(pt, &ptoff, &ptlook);
+    }
+
+    ptlook.l1->rw = 1;
+    ptlook.l1->avl_1 = 1;
+
+    pos = (void *) ((intptr_t) pos + Page::PAGE_SIZE);
+  }
+
+  return 0;
+}
+
+uint64_t Page::KernStackPos = Page::KSTACK_START_ADDR;
 
 void* Page::AllocKernStackMem() {
-  uint64_t entries = Page::KernStackOffSet / Page::KTHREAD_STACK_SIZE;
-  uint16_t p3_pos = entries / PAGE_TABLE_SIZE;
-  uint64_t p2_pos = entries % PAGE_TABLE_SIZE;
-
-  // If P3 entry hasn't been populated, create it;
-  if(!kern_stack_p3[p3_pos].p) {
-    void * pos = Frame::Alloc();
-    memset(pos, 0, Frame::FRAME_SIZE);
-    kern_stack_p3[p3_pos].base = PTR_TO_PTABLE_BASE(pos);
-    kern_stack_p3[p3_pos].p = 1;
-    kern_stack_p3[p3_pos].rw = 1;
+  struct PTEntry * curPT;
+  get_reg("cr3", curPT);
+  void * start = (void *) Page::KernStackPos;
+  void * end = (void *) (Page::KernStackPos + Page::KTHREAD_STACK_SIZE);
+  int res = alloc_virt_4k_chunk(curPT, start, end);
+  if(res) {
+    return NULL;
   }
-
-  struct PTEntry* kern_stack_p2 = LOOKUP_PAGE(kern_stack_p3[p3_pos].base);
-  kern_stack_p2[p2_pos].p = 1;
-  kern_stack_p2[p2_pos].rw = 1;
-  struct PTEntry* kern_stack_p1 = (struct PTEntry*) Frame::Alloc();
-  memset(kern_stack_p1, 0, Frame::FRAME_SIZE);
-  kern_stack_p2[p2_pos].base = PTR_TO_PTABLE_BASE(kern_stack_p1);
-  for(int i = 0; i < PAGE_TABLE_SIZE; i++) {
-    kern_stack_p1[i].rw = 1;
-    kern_stack_p1[i].avl_1 = 1;
-  }
-
-  void * ret = (void *) (Page::KSTACK_START_ADDR + Page::KernStackOffSet);
-  Page::KernStackOffSet += KTHREAD_STACK_SIZE;
-  return ret;
+  Page::KernStackPos = (uint64_t) end;
+  return start;
 }
 
 Page::Page() {
-  Page::PTableLoc = Frame::Alloc();
-  memset(Page::PTableLoc, 0, Frame::FRAME_SIZE);
+  Page::PTableLoc = Frame::AllocZeroed();
   struct PTEntry* p4 = (struct PTEntry*) Page::PTableLoc;
 
   // Identity Map

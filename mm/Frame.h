@@ -14,6 +14,7 @@ class Frame {
   static int AddMemExcludeRegion(uint64_t start, uint64_t end);
   static void PrintMemRegions();
   static void* Alloc();
+  static void* AllocZeroed();
   static void Free(void *);
  private:
    static int TotalRegions;
