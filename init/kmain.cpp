@@ -8,17 +8,6 @@
 
 extern "C" void kmain(uint32_t, void *);
 
-void test_page_alloc() {
-  void *addr = Frame::Alloc();
-  while(addr) {
-    printc("Alloced Page: 0x%p\n", addr);
-    Frame::Free(addr);
-    addr = Frame::Alloc();
-  }
-
-  printa("Ran out of frames\n");
-}
-
 void kmain(uint32_t mb_magic, void *mb_header) {
   printk("Loading Project SOL v0.alpha...\n");
 
@@ -28,25 +17,6 @@ void kmain(uint32_t mb_magic, void *mb_header) {
   printc("Console only...\n");
   printa("Both...\n");
   printa("Really long test testing testing one two three four...\n");
-
-  Platform::GetDflInput()->GetChar();
-
-  Page::InitIdentityMap();
-  printa("Ident Map Done\n");
-  Page p = Page();
-  p.Load();
-  printa("Post Page Table Switch\n");
-
-  void * t = Page::AllocKernStackMem();
-  printk("Alloced Stack at %p\n", t);
-  int* test = (int*)0x8000000004;
-  *test = 42;
-  printk("Read from stack %d\n", *test);
-  test = (int*)0x8000000004 + 40096*5;
-  *test = 55;
-  printk("Read from stack again %d\n", *test);
-
-  test_page_alloc();
 
   printk("> ");
 

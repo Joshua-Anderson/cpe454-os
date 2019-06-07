@@ -18,3 +18,9 @@ CharIn* Platform::GetDflInput() {
 
   return &ps2;
 }
+
+Page* Platform::GetDflPageTable() {
+  static Page page = Page();
+
+  return &page;
+}

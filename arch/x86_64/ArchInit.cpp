@@ -104,10 +104,5 @@ void ArchInit::Init(uint32_t mb_magic, void *mb_header) {
   INIT("KBD ", Platform::GetDflInput());
   INIT("MB  ", struct mb_info mbinfo = parse_multiboot(mb_magic, (uint8_t *) mb_header));
   init_mem_regions(&mbinfo);
-
-  // Page::InitIdentityMap();
-  // printa("Ident Map Done\n");
-  // Page p = Page();
-  // p.Load();
-  // printa("Post Page Table Switch\n");
+  INIT("PT ", Page::InitIdentityMap(); Platform::GetDflPageTable()->Load());
 }

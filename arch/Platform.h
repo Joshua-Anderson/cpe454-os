@@ -3,12 +3,14 @@
 
 #include "drivers/display/Display.h"
 #include "drivers/char/CharIn.h"
+#include "mm/Page.h"
 
 class Platform {
  public:
   static Display* GetDflConsole();
   static Display* GetDflDisplay();
   static CharIn* GetDflInput();
+  static Page* GetDflPageTable();
 };
 
 #endif
