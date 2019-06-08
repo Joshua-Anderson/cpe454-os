@@ -41,6 +41,7 @@ struct PageTableLookup {
 
 struct PTEntry identity_p3[PAGE_TABLE_SIZE] __attribute__((aligned(0x1000))) = {};
 struct PTEntry kern_stack_p3[PAGE_TABLE_SIZE] __attribute__((aligned(0x1000))) = {};
+struct PTEntry kern_heap_p3[PAGE_TABLE_SIZE] __attribute__((aligned(0x1000))) = {};
 
 static void addrToPageOffset(void* addr, struct PageOffsets* ptoff) {
   intptr_t a = (intptr_t) addr;
@@ -134,12 +135,7 @@ static int alloc_virt_4k_chunk(struct PTEntry* pt, void * start, void * end) {
     return 1;
   }
 
-  struct PageOffsets st_off, end_off;
-  addrToPageOffset(start, &st_off);
-  addrToPageOffset(end, &end_off);
-
   void *pos = start;
-
   while(pos < end) {
     struct PageOffsets ptoff;
     struct PageTableLookup ptlook;
@@ -198,6 +194,21 @@ void* Page::AllocKernStackMem() {
   return start;
 }
 
+uint64_t Page::KernHeapPos = Page::KHEAP_START_ADDR;
+
+void* Page::AllocKernHeapPage() {
+  struct PTEntry * curPT;
+  get_reg("cr3", curPT);
+  void * start = (void *) Page::KernHeapPos;
+  void * end = (void *) (Page::KernHeapPos + Page::PAGE_SIZE);
+  int res = alloc_virt_4k_chunk(curPT, start, end);
+  if(res) {
+    return NULL;
+  }
+  Page::KernHeapPos = (uint64_t) end;
+  return start;
+}
+
 Page::Page() {
   Page::PTableLoc = Frame::AllocZeroed();
   struct PTEntry* p4 = (struct PTEntry*) Page::PTableLoc;
@@ -208,9 +219,17 @@ Page::Page() {
   p4[0].rw = 1;
 
   // Kernel Stack
-  p4[1].base = PTR_TO_PTABLE_BASE(&kern_stack_p3[0]);
-  p4[1].p = 1;
-  p4[1].rw = 1;
+  struct PageOffsets ptoff;
+  addrToPageOffset((void *) Page::KSTACK_START_ADDR, &ptoff);
+  p4[ptoff.l4].base = PTR_TO_PTABLE_BASE(&kern_stack_p3[0]);
+  p4[ptoff.l4].p = 1;
+  p4[ptoff.l4].rw = 1;
+
+  // Kernel Heap
+  addrToPageOffset((void *) Page::KHEAP_START_ADDR, &ptoff);
+  p4[ptoff.l4].base = PTR_TO_PTABLE_BASE(&kern_heap_p3[0]);
+  p4[ptoff.l4].p = 1;
+  p4[ptoff.l4].rw = 1;
 }
 
 void Page::Load() {
