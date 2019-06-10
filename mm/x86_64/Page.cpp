@@ -179,6 +179,48 @@ static int alloc_virt_4k_chunk(struct PTEntry* pt, void * start, void * end) {
   return 0;
 }
 
+static int free_virt_4k_chunk(struct PTEntry* pt, void * start, void * end) {
+  if((intptr_t) start % Page::PAGE_SIZE || (intptr_t) end % Page::PAGE_SIZE) {
+    printk("ERROR: Unaligned memory allocation %p->%p\n", start, end);
+    return 1;
+  }
+
+  void *pos = start;
+  while(pos < end) {
+    struct PageOffsets ptoff;
+    struct PageTableLookup ptlook;
+    addrToPageOffset(pos, &ptoff);
+    walkPageTable(pt, &ptoff, &ptlook);
+
+    if(!ptlook.l4->p) {
+      printk("ERROR: Unalloced Page Table Level 4 Segment %p while freeing\n", pos);
+      return 1;
+    }
+
+    if(ptlook.l1) {
+      if(ptlook.l1->p) {
+        Frame::Free(PTABLE_BASE_TO_PTR(ptlook.l1->base));
+      }
+
+      ptlook.l1->p = 0;
+      ptlook.l1->avl_1 = 0;
+    }
+
+    if(ptlook.l2) {
+      if(ptlook.l2->avl_1 && !ptlook.l2->p) {
+        ptlook.l2->avl_1 = 0;
+      }
+
+    }
+
+    // TODO: L2 and L3 Page Tables when no longer needed
+
+    pos = (void *) ((intptr_t) pos + Page::PAGE_SIZE);
+  }
+
+  return 0;
+}
+
 uint64_t Page::KernStackPos = Page::KSTACK_START_ADDR;
 
 void* Page::AllocKernStackMem() {
@@ -194,6 +236,12 @@ void* Page::AllocKernStackMem() {
   return start;
 }
 
+void Page::FreeKernStackMem(void *addr) {
+  struct PTEntry * curPT;
+  get_reg("cr3", curPT);
+  free_virt_4k_chunk(curPT, addr, (void *) ((intptr_t) addr + Page::KTHREAD_STACK_SIZE));
+}
+
 uint64_t Page::KernHeapPos = Page::KHEAP_START_ADDR;
 
 void* Page::AllocKernHeapPage() {
@@ -207,6 +255,12 @@ void* Page::AllocKernHeapPage() {
   }
   Page::KernHeapPos = (uint64_t) end;
   return start;
+}
+
+void Page::FreeKernHeapPage(void *addr) {
+  struct PTEntry * curPT;
+  get_reg("cr3", curPT);
+  free_virt_4k_chunk(curPT, addr, (void *) ((intptr_t) addr + Page::PAGE_SIZE));
 }
 
 Page::Page() {
