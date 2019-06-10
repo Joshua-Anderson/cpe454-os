@@ -1,10 +1,10 @@
-#include "drivers/char/x86_64/PS2.h"
 #include "arch/ArchInit.h"
 #include "arch/Platform.h"
+#include "drivers/char/x86_64/PS2.h"
 #include "irq/IRQ.h"
-#include "printk.h"
 #include "mm/Frame.h"
 #include "mm/Page.h"
+#include "printk.h"
 
 extern "C" void kmain(uint32_t, void *);
 
@@ -21,7 +21,7 @@ void kmain(uint32_t mb_magic, void *mb_header) {
   printk("> ");
 
   while (1) {
-     printk("%c", Platform::GetDflInput()->GetChar());
+    printk("%c", Platform::GetDflInput()->GetChar());
   }
   return;
 }

@@ -18,13 +18,11 @@ struct elf_section_hdr {
   uint64_t vaddr;
   uint64_t offset;
   uint64_t fsize;
-  uint32_t link; //Index of section
+  uint32_t link;  // Index of section
   uint32_t info;
   uint64_t addr_align;
   uint64_t entsize;
 };
-
 }
-
 
 #endif

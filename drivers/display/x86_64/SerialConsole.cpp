@@ -1,24 +1,24 @@
-#include <stdint.h>
-#include "stdlib.h"
-#include "arch/x86_64/arch.h"
 #include "SerialConsole.h"
-#include "printk.h"
+#include <stdint.h>
+#include "arch/x86_64/arch.h"
 #include "irq/IRQ.h"
+#include "printk.h"
+#include "stdlib.h"
 
 #define SERIAL_DATA_REG 0x3F8
-#define SERIAL_IE_REG SERIAL_DATA_REG+1
-#define SERIAL_FIFO_REG SERIAL_DATA_REG+2
+#define SERIAL_IE_REG SERIAL_DATA_REG + 1
+#define SERIAL_FIFO_REG SERIAL_DATA_REG + 2
 #define SERIAL_II_REG SERIAL_FIFO_REG
-#define SERIAL_LC_REG SERIAL_DATA_REG+3
-#define SERIAL_MC_REG SERIAL_DATA_REG+3
-#define SERIAL_LS_REG SERIAL_DATA_REG+5
+#define SERIAL_LC_REG SERIAL_DATA_REG + 3
+#define SERIAL_MC_REG SERIAL_DATA_REG + 3
+#define SERIAL_LS_REG SERIAL_DATA_REG + 5
 
 #define PARITY_NONE 0
 #define DATA_BITS_8 3
 #define ONE_STOP_BIT 0
 #define FIFO_DEPTH_1 0
 
-#define STUCT2BYTE(s) *((uint8_t *) &s)
+#define STUCT2BYTE(s) *((uint8_t*)&s)
 
 struct IER {
   uint8_t data_avail : 1;
@@ -77,26 +77,24 @@ struct IIR {
 } __attribute__((packed));
 
 #define BUF_SIZE 256
-#define BUF_INC(v) v = ((v+1) % BUF_SIZE)
+#define BUF_INC(v) v = ((v + 1) % BUF_SIZE)
 
 static char buf[256];
 static int buf_prod = 0;
 static int buf_consumer = 0;
 
-inline void serial_tx(char c) {
-  outb(SERIAL_DATA_REG, c);
-}
+inline void serial_tx(char c) { outb(SERIAL_DATA_REG, c); }
 
 void serial_irq_handler(unsigned int, unsigned int) {
   uint8_t iir_dat = inb(SERIAL_II_REG);
-  struct IIR* iir = (struct IIR*) &iir_dat;
+  struct IIR* iir = (struct IIR*)&iir_dat;
 
-  if(iir->status != IIR_STATUS_TX_EMPTY) {
+  if (iir->status != IIR_STATUS_TX_EMPTY) {
     printk("ERR: Serial IRQ not a TX Empty Interrupt %hx\n", iir_dat);
     return;
   }
 
-  if(buf_prod == buf_consumer) {
+  if (buf_prod == buf_consumer) {
     return;
   }
 
@@ -106,7 +104,7 @@ void serial_irq_handler(unsigned int, unsigned int) {
 
 inline int serial_idle() {
   uint8_t lsr_dat = inb(SERIAL_LS_REG);
-  struct LSR* lsr = (struct LSR *) &lsr_dat;
+  struct LSR* lsr = (struct LSR*)&lsr_dat;
   return lsr->tx_empty;
 }
 
@@ -115,11 +113,11 @@ void SerialConsole::PrintChar(char c) {
   buf[buf_prod] = c;
   BUF_INC(buf_prod);
 
-  if(buf_consumer == buf_prod) {
+  if (buf_consumer == buf_prod) {
     BUF_INC(buf_consumer);
   }
 
-  if(!serial_idle()) {
+  if (!serial_idle()) {
     return;
   }
 
@@ -139,8 +137,8 @@ SerialConsole::SerialConsole() {
   struct LCR lcr = {};
   lcr.dlab = 1;
   outb(SERIAL_LC_REG, STUCT2BYTE(lcr));
-  outb(SERIAL_DATA_REG, 1); // LSB
-  outb(SERIAL_IE_REG, 0); // MSB
+  outb(SERIAL_DATA_REG, 1);  // LSB
+  outb(SERIAL_IE_REG, 0);    // MSB
 
   // Clear dlab and set 8N1 serial mode
   lcr.dlab = 0;

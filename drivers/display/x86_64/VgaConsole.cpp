@@ -43,7 +43,8 @@ void VgaConsole::PrintChar(char in) {
       VgaConsole::pos--;
       break;
     case '\t':
-      VgaConsole::pos += TAB_SIZE - (VgaConsole::pos % VgaConsole::cols) % TAB_SIZE;
+      VgaConsole::pos +=
+          TAB_SIZE - (VgaConsole::pos % VgaConsole::cols) % TAB_SIZE;
       break;
     case '\r':
       VgaConsole::pos = VgaConsole::pos - VgaConsole::pos % VgaConsole::cols;

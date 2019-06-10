@@ -1,7 +1,10 @@
 #include "stdlib.h"
 #include <stdint.h>
 
-void __cxa_pure_virtual() { while (1); }
+void __cxa_pure_virtual() {
+  while (1)
+    ;
+}
 
 void *memset(void *dst, int c, size_t n) {
   char *tmp = (char *)dst;

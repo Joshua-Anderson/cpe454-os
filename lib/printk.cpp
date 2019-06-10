@@ -1,8 +1,8 @@
 #include <stdarg.h>
 
+#include "arch/ArchInit.h"
 #include "printk.h"
 #include "stdlib.h"
-#include "arch/ArchInit.h"
 
 static void reverse(char s[]) {
   for (int i = 0, j = strlen(s) - 1; i < j; i++, j--) {
@@ -117,7 +117,7 @@ int print_disp(Display *disp, const char *fmt, ...) {
             }
             break;
           case 'p':
-            printk_uint(disp, (intptr_t )va_arg(argp, void *), 16);
+            printk_uint(disp, (intptr_t)va_arg(argp, void *), 16);
             break;
           case 's':
             printk_str(disp, va_arg(argp, char *));
@@ -141,4 +141,3 @@ int print_disp(Display *disp, const char *fmt, ...) {
   va_end(argp);
   return 0;
 }
-

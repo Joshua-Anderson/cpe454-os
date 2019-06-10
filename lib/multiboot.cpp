@@ -1,6 +1,6 @@
-#include "stdlib.h"
-#include "printk.h"
 #include "multiboot.h"
+#include "printk.h"
+#include "stdlib.h"
 
 #define MULTIBOOT_MAGIC 0x36d76289
 #define MULTIBOOT_MEMINFO_TYPE 4
@@ -8,7 +8,7 @@
 #define MULTIBOOT_ELF_TYPE 9
 #define MULTIBOOT_MMAP_REGION_RAM 1
 
-#define PAD_PTR(x) x = (uint8_t*) ((((intptr_t) x) + 7) & ~7)
+#define PAD_PTR(x) x = (uint8_t*)((((intptr_t)x) + 7) & ~7)
 
 struct mb_header {
   uint32_t total_size;
@@ -43,14 +43,17 @@ struct mb_meminfo_header {
 } __attribute__((packed));
 
 struct elf_section_hdr* get_mb_elf_section(uint16_t id, struct mb_info* info) {
-  return (struct elf_section_hdr *) ((intptr_t) info->elf_tag + sizeof(struct mb_elf_header) + (id*info->elf_ent_size));
+  return (struct elf_section_hdr*)((intptr_t)info->elf_tag +
+                                   sizeof(struct mb_elf_header) +
+                                   (id * info->elf_ent_size));
 }
 
+struct mb_mm_entry* next_mb_mmap(struct mb_mm_entry* entry,
+                                 struct mb_info* info) {
+  struct mb_mm_entry* nxt =
+      (struct mb_mm_entry*)((intptr_t)entry + info->mmap_entry_size);
 
-struct mb_mm_entry* next_mb_mmap(struct mb_mm_entry* entry, struct mb_info* info) {
-  struct mb_mm_entry* nxt = (struct mb_mm_entry*) ((intptr_t) entry + info->mmap_entry_size);
-
-  if((intptr_t) nxt < (intptr_t) info->mmap_max) {
+  if ((intptr_t)nxt < (intptr_t)info->mmap_max) {
     return nxt;
   }
 
@@ -60,41 +63,43 @@ struct mb_mm_entry* next_mb_mmap(struct mb_mm_entry* entry, struct mb_info* info
 struct mb_info parse_multiboot(uint32_t magic, uint8_t* header) {
   struct mb_info info = {};
 
-  if(magic != MULTIBOOT_MAGIC) {
-    printk("Invalid Multiboot Magic (Got %x, Expected %x)...\n", magic, MULTIBOOT_MAGIC);
+  if (magic != MULTIBOOT_MAGIC) {
+    printk("Invalid Multiboot Magic (Got %x, Expected %x)...\n", magic,
+           MULTIBOOT_MAGIC);
     return info;
   }
 
-  struct mb_header* mbh = (struct mb_header*) header;
+  struct mb_header* mbh = (struct mb_header*)header;
 
-  uint8_t *max = header + mbh->total_size;
-  uint8_t *pos = header + sizeof(mb_header);
+  uint8_t* max = header + mbh->total_size;
+  uint8_t* pos = header + sizeof(mb_header);
   PAD_PTR(pos);
 
-  while(pos < max) {
-    struct mb_subheader* sh = (struct mb_subheader*) pos;
+  while (pos < max) {
+    struct mb_subheader* sh = (struct mb_subheader*)pos;
     printc("Pos: %p, Type: %u, Size %d\n", pos, sh->type, sh->size);
 
-    if(sh->type == 0) {
+    if (sh->type == 0) {
       printc("Terminating tag\n");
       break;
     }
 
-    if(sh->type == MULTIBOOT_MEMINFO_TYPE) {
-      struct mb_meminfo_header* mh = (struct mb_meminfo_header *) sh;
+    if (sh->type == MULTIBOOT_MEMINFO_TYPE) {
+      struct mb_meminfo_header* mh = (struct mb_meminfo_header*)sh;
       info.mem_lower = mh->mem_lower;
       info.mem_upper = mh->mem_upper;
     }
 
-    if(sh->type == MULTIBOOT_MMAP_TYPE) {
-      struct mb_mm_header* mh = (struct mb_mm_header *) sh;
+    if (sh->type == MULTIBOOT_MMAP_TYPE) {
+      struct mb_mm_header* mh = (struct mb_mm_header*)sh;
       info.mmap_entry_size = mh->entry_size;
-      info.mmap = (struct mb_mm_entry*) ((intptr_t) mh + sizeof(struct mb_mm_header));
-      info.mmap_max = (void *) ((intptr_t) mh + mh->size);
+      info.mmap =
+          (struct mb_mm_entry*)((intptr_t)mh + sizeof(struct mb_mm_header));
+      info.mmap_max = (void*)((intptr_t)mh + mh->size);
     }
 
-    if(sh->type == MULTIBOOT_ELF_TYPE) {
-      struct mb_elf_header* eh = (struct mb_elf_header *) sh;
+    if (sh->type == MULTIBOOT_ELF_TYPE) {
+      struct mb_elf_header* eh = (struct mb_elf_header*)sh;
       info.elf_tag = eh;
       info.elf_num_entries = eh->num;
       info.elf_ent_size = eh->entry_size;
@@ -104,7 +109,7 @@ struct mb_info parse_multiboot(uint32_t magic, uint8_t* header) {
     PAD_PTR(pos);
   }
 
-  if(pos >= max) {
+  if (pos >= max) {
     printa("Err: Invalid Multiboot Header\n");
   }
 

@@ -1,7 +1,7 @@
 #include "arch/Platform.h"
-#include "drivers/display/x86_64/VgaConsole.h"
-#include "drivers/display/x86_64/SerialConsole.h"
 #include "drivers/char/x86_64/PS2.h"
+#include "drivers/display/x86_64/SerialConsole.h"
+#include "drivers/display/x86_64/VgaConsole.h"
 
 Display* Platform::GetDflConsole() {
   static SerialConsole console = SerialConsole();

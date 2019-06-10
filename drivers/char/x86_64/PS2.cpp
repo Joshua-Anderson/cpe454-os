@@ -39,7 +39,7 @@ struct PS2_CtrlCfg {
 } __attribute__((__packed__));
 
 #define BUF_SIZE 4
-#define BUF_INC(v) v = ((v+1) % BUF_SIZE)
+#define BUF_INC(v) v = ((v + 1) % BUF_SIZE)
 
 static uint8_t buf[BUF_SIZE];
 static volatile int buf_prod = 0;
@@ -69,7 +69,7 @@ void PS2_irq_handler(unsigned int, unsigned int) {
   buf[buf_prod] = inb(PS2_DATA_REG);
   BUF_INC(buf_prod);
 
-  if(buf_prod == buf_consumer) {
+  if (buf_prod == buf_consumer) {
     BUF_INC(buf_consumer);
   }
 }
@@ -116,9 +116,9 @@ char PS2::GetLetter(char c) {
 char PS2::GetChar() {
   uint8_t val;
 
-  while(1) {
+  while (1) {
     IRQ::Disable();
-    if(buf_consumer != buf_prod) {
+    if (buf_consumer != buf_prod) {
       break;
     }
     IRQ::Enable();

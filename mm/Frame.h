@@ -15,12 +15,13 @@ class Frame {
   static void PrintMemRegions();
   static void* Alloc();
   static void* AllocZeroed();
-  static void Free(void *);
+  static void Free(void*);
+
  private:
-   static int TotalRegions;
-   static uint64_t MemReg[MAX_MEM_REGIONS][3];
-   static int TotalEx;
-   static uint64_t MemEx[MAX_EXCLUDE_REGIONS][2];
+  static int TotalRegions;
+  static uint64_t MemReg[MAX_MEM_REGIONS][3];
+  static int TotalEx;
+  static uint64_t MemEx[MAX_EXCLUDE_REGIONS][2];
 };
 
 #endif

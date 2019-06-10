@@ -120,7 +120,9 @@ static inline void init_idt(struct IDT_entry *idt, void (*handler)(void),
 extern "C" void irq_handler(uint32_t num, uint32_t err) {
   if (!IRQ_handlers[num]) {
     printk("FATAL: Unhandled IRQ %u Called (Err %u)!\n", num, err);
-    while(1) { hlt(); };
+    while (1) {
+      hlt();
+    };
   }
 
   IRQ_handlers[num](num, err);
@@ -223,11 +225,11 @@ void IRQ::Init() {
 
   // Setup independant stacks for special processor execeptions
   IDT[DF_FAULT].ist = 1;
-  GDT::LoadIST(1, &df_stack[sizeof(df_stack)-1]);
+  GDT::LoadIST(1, &df_stack[sizeof(df_stack) - 1]);
   IDT[GP_FAULT].ist = 2;
-  GDT::LoadIST(2, &gp_stack[sizeof(gp_stack)-1]);
+  GDT::LoadIST(2, &gp_stack[sizeof(gp_stack) - 1]);
   IDT[PF_FAULT].ist = 3;
-  GDT::LoadIST(3, &pf_stack[sizeof(pf_stack)-1]);
+  GDT::LoadIST(3, &pf_stack[sizeof(pf_stack) - 1]);
 
   // Start Initializing PIC
   outb(PIC_MASTER_CMD_REG, PIC_INIT);

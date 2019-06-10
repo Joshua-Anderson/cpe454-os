@@ -1,8 +1,8 @@
 #ifndef __PLATFORM_H__
 #define __PLATFORM_H__
 
-#include "drivers/display/Display.h"
 #include "drivers/char/CharIn.h"
+#include "drivers/display/Display.h"
 #include "mm/Page.h"
 
 class Platform {
