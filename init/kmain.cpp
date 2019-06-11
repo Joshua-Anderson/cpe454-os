@@ -5,6 +5,7 @@
 #include "mm/Frame.h"
 #include "mm/Page.h"
 #include "printk.h"
+#include "kmalloc.h"
 
 extern "C" void kmain(uint32_t, void *);
 
@@ -17,6 +18,19 @@ void kmain(uint32_t mb_magic, void *mb_header) {
   printc("Console only...\n");
   printa("Both...\n");
   printa("Really long test testing testing one two three four...\n");
+
+  void *small = kmalloc(3);
+  printc("Small Adder: %p\n", small);
+  void *med = kmalloc(200);
+  printc("Med Addr: %p\n", med);
+  kfree(small);
+  small = kmalloc(3);
+  printc("New Small Adder: %p\n", small);
+  kfree(med);
+  kfree(small);
+  void *huge = kmalloc(6000);
+  printc("Huge Adder: %p\n", huge);
+  kfree(huge);
 
   printk("> ");
 

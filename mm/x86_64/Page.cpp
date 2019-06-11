@@ -186,7 +186,7 @@ static int alloc_virt_4k_chunk(struct PTEntry* pt, void* start, void* end) {
 
 static int free_virt_4k_chunk(struct PTEntry* pt, void* start, void* end) {
   if ((intptr_t)start % Page::PAGE_SIZE || (intptr_t)end % Page::PAGE_SIZE) {
-    printk("ERROR: Unaligned memory allocation %p->%p\n", start, end);
+    printk("ERROR: Unaligned memory free %p->%p\n", start, end);
     return 1;
   }
 
