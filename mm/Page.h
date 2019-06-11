@@ -17,7 +17,9 @@ class Page {
   static void* AllocKernStackMem();
   static void FreeKernStackMem(void*);
   static void* AllocKernHeapPage();
+  static void* AllocKernHeap(uint32_t);
   static void FreeKernHeapPage(void*);
+  static void FreeKernHeap(void*, uint32_t);
   static void InitIdentityMap();
 
   Page();

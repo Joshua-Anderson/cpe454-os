@@ -251,10 +251,14 @@ void Page::FreeKernStackMem(void* addr) {
 uint64_t Page::KernHeapPos = Page::KHEAP_START_ADDR;
 
 void* Page::AllocKernHeapPage() {
+  return Page::AllocKernHeap(Page::PAGE_SIZE);
+}
+
+void* Page::AllocKernHeap(uint32_t size) {
   struct PTEntry* curPT;
   get_reg("cr3", curPT);
   void* start = (void*)Page::KernHeapPos;
-  void* end = (void*)(Page::KernHeapPos + Page::PAGE_SIZE);
+  void* end = (void*)(Page::KernHeapPos + size);
   int res = alloc_virt_4k_chunk(curPT, start, end);
   if (res) {
     return NULL;
@@ -264,9 +268,13 @@ void* Page::AllocKernHeapPage() {
 }
 
 void Page::FreeKernHeapPage(void* addr) {
+  Page::FreeKernHeap(addr, Page::PAGE_SIZE);
+}
+
+void Page::FreeKernHeap(void* addr, uint32_t size) {
   struct PTEntry* curPT;
   get_reg("cr3", curPT);
-  free_virt_4k_chunk(curPT, addr, (void*)((intptr_t)addr + Page::PAGE_SIZE));
+  free_virt_4k_chunk(curPT, addr, (void*)((intptr_t)addr + size));
 }
 
 Page::Page() {

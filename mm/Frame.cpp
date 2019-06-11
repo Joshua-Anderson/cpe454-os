@@ -3,8 +3,6 @@
 #include "printk.h"
 #include "stdlib.h"
 
-#define ROUND_UP(num, mult) ((num + mult - 1) / mult) * mult
-
 struct FreeFrame {
   struct FreeFrame* nxt;
   struct FreeFrame* prev;
