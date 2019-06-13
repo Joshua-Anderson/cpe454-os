@@ -13,7 +13,7 @@ Process::Process(unsigned pid) { Process::pid = pid; }
 Process::Process(unsigned pid, kentry_t entry, void* arg) {
   Process::pid = pid;
   Process::regs.rip = (uint64_t)entry;
-  Process::regs.rdx = (uint64_t)arg;
+  Process::regs.rdi = (uint64_t)arg;
   Process::regs.cs = GDT::CS_SEG;
   Process::initial_stack = Page::AllocKernStackMem();
   Process::regs.rsp = (uint64_t)Process::initial_stack;

@@ -36,6 +36,7 @@
 #include "proc/Scheduler.h"
 #include "snakes.h"
 #include "syscall/SysCall.h"
+#include "printk.h"
 
 #define SN_LENGTH 10
 #define SN_BODY_CHAR '*'
@@ -78,10 +79,10 @@ static void srand(int newseed) {
   seed = (unsigned)newseed & 0x7fffffffffffffffU;
 }
 
-int rand(void) {
+unsigned rand(void) {
   seed = (seed * 6364136223846793005U + 1442695040888963407U) &
          0x7fffffffffffffffU;
-  return (int)seed;
+  return (unsigned) seed;
 }
 
 // Delay functions
@@ -183,6 +184,7 @@ void run_hungry_snake(void *arg) {
 
   for (;;) {
     delay();
+    printc("Running snake %d\n", (*s)->pid);
     erase_snake(*s);
     move_hungry_snake(*s);
     draw_snake(*s);
@@ -198,6 +200,7 @@ void run_hungry_snake(void *arg) {
       /* now check to see if we're "full" */
       if ((*s)->color > MAX_VISIBLE_SNAKE) {
         free_snake(*s);
+        printc("Exiting snake %d\n", (*s)->pid);
         SysCall::ProcExit();
       }
       draw_snake(*s);
@@ -209,6 +212,7 @@ void run_hungry_snake(void *arg) {
       free_snake(*s);
       SysCall::ProcExit();
     }
+    printc("Yielding snake %d\n", (*s)->pid);
     SysCall::ProcYield(); /* yield to the next snake */
   }
 }
@@ -218,6 +222,7 @@ void run_snake(void *arg) {
   /* run a snake until the endsnake flag is set. */
   for (;;) {
     delay();
+    printc("Running snake %d\n", (*s)->pid);
     erase_snake(*s);
     move_snake(*s);
     draw_snake(*s);
@@ -225,8 +230,10 @@ void run_snake(void *arg) {
       endsnake = 0; /* clear the flag */
       erase_snake(*s);
       free_snake(*s);
+      printc("Exiting snake %d\n", (*s)->pid);
       SysCall::ProcExit();
     }
+    printc("Yielding snake %d\n", (*s)->pid);
     SysCall::ProcYield(); /* yield to the next snake */
   }
 }
@@ -274,7 +281,9 @@ static void move_snake(snake s) {
   while (obstructed(newhead) && !alldead) {
     deadends[s->dir] = 1;
     s->dir = (direction)(rand() % NUMDIRS);
-    if (s->dir >= NUMDIRS) s->dir = (direction)(NUMDIRS - 1);
+    if (s->dir >= NUMDIRS) {
+      s->dir = (direction)(NUMDIRS - 1);
+    }
     // s->dir = (int) ((1.0 * rand()/INT_MAX) * NUMDIRS);
     newhead.x = s->body[0].x + deltaX[s->dir];
     newhead.y = s->body[0].y + deltaY[s->dir];
@@ -339,7 +348,9 @@ static void move_hungry_snake(snake s) {
   while (obstructed(newhead) && !alldead) {
     deadends[s->dir] = 1;
     s->dir = (direction)(rand() % NUMDIRS);
-    if (s->dir >= NUMDIRS) s->dir = (direction)(NUMDIRS - 1);
+    if ((unsigned) s->dir >= NUMDIRS) {
+      s->dir = (direction)(NUMDIRS - 1);
+    }
     // s->dir = (int) ((1.0 * rand()/INT_MAX) * NUMDIRS);
     newhead.x = s->body[0].x + deltaX[s->dir];
     newhead.y = s->body[0].y + deltaY[s->dir];
@@ -348,9 +359,13 @@ static void move_hungry_snake(snake s) {
       if (deadends[i] == 0) alldead = 0;
   }
 
+  printc("Alldead %d\n", s->pid);
+
   if (alldead) { /* we're stuck */
     newhead = s->body[0];
   }
+
+  printc("End of move %d\n", s->pid);
 
   for (i = s->len - 1; i; i--) {
     s->body[i].x = s->body[i - 1].x;
@@ -401,7 +416,7 @@ extern void set_snake_delay(unsigned int msec) {
 static int noop_func(int i) { return i + 10; }
 
 static void delay() {
-  for (int i = 0; i < 0xFFFFF; i++) noop_func(10);
+  for (int i = 0; i < 0xFFFF; i++) noop_func(10);
 #if 0
   /*
    * Sleep for the number of milliseconds specified by

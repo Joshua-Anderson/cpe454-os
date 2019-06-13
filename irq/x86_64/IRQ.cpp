@@ -79,6 +79,7 @@ extern void irq_48(void);
 uint8_t gp_stack[EXCEPTION_STACK_SIZE] __attribute__((aligned(0x10)));
 uint8_t df_stack[EXCEPTION_STACK_SIZE] __attribute__((aligned(0x10)));
 uint8_t pf_stack[EXCEPTION_STACK_SIZE] __attribute__((aligned(0x10)));
+uint8_t syscall_stack[2048] __attribute__((aligned(0x10)));
 
 struct IDT_entry {
   uint16_t tar_offset_1;
@@ -238,6 +239,8 @@ void IRQ::Init() {
   GDT::LoadIST(2, &gp_stack[sizeof(gp_stack) - 1]);
   IDT[PF_FAULT].ist = 3;
   GDT::LoadIST(3, &pf_stack[sizeof(pf_stack) - 1]);
+  IDT[SYSCALL_IRQ].ist = 4;
+  GDT::LoadIST(4, &syscall_stack[sizeof(syscall_stack) - 1]);
 
   // Start Initializing PIC
   outb(PIC_MASTER_CMD_REG, PIC_INIT);
