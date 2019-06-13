@@ -1,6 +1,5 @@
 #include <stdarg.h>
 
-#include "arch/ArchInit.h"
 #include "printk.h"
 #include "stdlib.h"
 

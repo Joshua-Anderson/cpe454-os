@@ -1,16 +1,14 @@
 #include <stddef.h>
 
-#include "arch/ArchInit.h"
 #include "arch/Platform.h"
 #include "irq/IRQ.h"
+#include "kmain.h"
 #include "kmalloc.h"
 #include "mm/Frame.h"
 #include "mm/Page.h"
 #include "printk.h"
 #include "proc/Scheduler.h"
 #include "syscall/syscall.h"
-
-extern "C" void kmain(uint32_t, void *);
 
 void thread1(void *) {
   printk("Hello from thread 1!\n");
@@ -22,11 +20,7 @@ void thread2(void *) {
   thread_exit();
 }
 
-void kmain(uint32_t mb_magic, void *mb_header) {
-  printk("Loading Project SOL v0.alpha...\n");
-
-  ArchInit::Init(mb_magic, mb_header);
-
+void kmain() {
   printk("Display only...\n");
   printc("Console only...\n");
   printa("Both...\n");

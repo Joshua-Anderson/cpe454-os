@@ -1,5 +1,5 @@
 global long_mode_start
-extern kmain
+extern kinit_x86_64
 
 section .text
 bits 64
@@ -15,5 +15,5 @@ long_mode_start:
     ; start kernel c code
     mov edi, eax
     mov esi, ebx
-    call kmain
+    call kinit_x86_64
     hlt

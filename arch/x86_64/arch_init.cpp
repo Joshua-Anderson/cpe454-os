@@ -1,7 +1,7 @@
-#include "arch/ArchInit.h"
 #include "GDT.h"
 #include "arch/Platform.h"
 #include "elf.h"
+#include "init/kmain.h"
 #include "irq/IRQ.h"
 #include "mm/Frame.h"
 #include "mm/Page.h"
@@ -15,6 +15,8 @@
   printk("Initializing %s...", msg); \
   func;                              \
   INIT_OK();
+
+extern "C" void kinit_x86_64(uint32_t, void*);
 
 void init_mem_regions(struct mb_info* mbinfo) {
   printk("Initializing MM  ...");
@@ -96,7 +98,8 @@ void init_mem_regions(struct mb_info* mbinfo) {
   Frame::PrintMemRegions();
 }
 
-void ArchInit::Init(uint32_t mb_magic, void* mb_header) {
+void kinit_x86_64(uint32_t mb_magic, void* mb_header) {
+  printk("Loading Project SOL v0.alpha...\n");
   INIT("GDT ", GDT::InitGDT());
   INIT("TSS ", GDT::InitTSS());
   INIT("IRQs", IRQ::Init());
@@ -106,4 +109,5 @@ void ArchInit::Init(uint32_t mb_magic, void* mb_header) {
        struct mb_info mbinfo = parse_multiboot(mb_magic, (uint8_t*)mb_header));
   init_mem_regions(&mbinfo);
   INIT("PT ", Page::InitIdentityMap(); Platform::GetDflPageTable()->Load());
+  kmain();
 }

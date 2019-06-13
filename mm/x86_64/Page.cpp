@@ -98,8 +98,6 @@ void pf_irq_handler(uint32_t, uint32_t err) {
 
   struct PageOffsets ptoff;
   addrToPageOffset((void*)fault_addr, &ptoff);
-  printk("Page Offset: ptable[%u][%u][%u][%u]\n", ptoff.l4, ptoff.l3, ptoff.l2,
-         ptoff.l1);
   struct PageTableLookup ptlook;
   walkPageTable(pt, &ptoff, &ptlook);
 
