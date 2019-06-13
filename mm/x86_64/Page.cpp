@@ -39,6 +39,10 @@ struct PageTableLookup {
 
 #define PAGE_TABLE_SIZE 512
 
+#define PAGE_ERR_P(x) (x & 0b001)
+#define PAGE_ERR_W(x) (x & 0b010)
+#define PAGE_ERR_USR(x) (x & 0b100)
+
 struct PTEntry identity_p3[PAGE_TABLE_SIZE]
     __attribute__((aligned(0x1000))) = {};
 struct PTEntry kern_stack_p3[PAGE_TABLE_SIZE]
@@ -78,12 +82,14 @@ static void walkPageTable(struct PTEntry* pt, struct PageOffsets* ptoff,
   ptlook->l1 = &PTABLE_BASE_TO_PTR(ptlook->l2->base)[ptoff->l1];
 }
 
-void pf_irq_handler(unsigned int, unsigned int err) {
+void pf_irq_handler(uint32_t, uint32_t err) {
   uint64_t fault_addr;
   get_reg("cr2", fault_addr);
 
-  if (err) {
-    printk("Fatal Page Fault: CR2 is 0x%lx, err is %u\n", fault_addr, err);
+  if (PAGE_ERR_P(err)) {
+    printk("Fatal Page Fault: Addr 0x%lx (Usr: %d, Write: %d, Present: %d)\n",
+           fault_addr, !!PAGE_ERR_USR(err), !!PAGE_ERR_W(err),
+           !!PAGE_ERR_P(err));
     hlt();
   }
 
@@ -250,9 +256,7 @@ void Page::FreeKernStackMem(void* addr) {
 
 uint64_t Page::KernHeapPos = Page::KHEAP_START_ADDR;
 
-void* Page::AllocKernHeapPage() {
-  return Page::AllocKernHeap(Page::PAGE_SIZE);
-}
+void* Page::AllocKernHeapPage() { return Page::AllocKernHeap(Page::PAGE_SIZE); }
 
 void* Page::AllocKernHeap(uint32_t size) {
   struct PTEntry* curPT;
@@ -301,6 +305,6 @@ Page::Page() {
 }
 
 void Page::Load() {
-  set_reg("cr3", (uint64_t)Page::PTableLoc);
+  set_reg_no_clobber("cr3", (uint64_t)Page::PTableLoc);
   IRQ::Register(PF_FAULT, pf_irq_handler);
 }

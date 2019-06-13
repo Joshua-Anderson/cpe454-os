@@ -1,9 +1,9 @@
 #include <stddef.h>
 
 #include "kmalloc.h"
-#include "stdlib.h"
-#include "printk.h"
 #include "mm/Page.h"
+#include "printk.h"
+#include "stdlib.h"
 
 struct FreeEntry {
   struct FreeEntry *prev;
@@ -21,27 +21,28 @@ struct KmallocEntry {
 
 #define NUM_POOLS 5
 static struct KmallocPool kmalloc_pools[NUM_POOLS] = {
-  {.size = 32, .free_entries = NULL},
-  {.size = 128, .free_entries = NULL},
-  {.size = 512, .free_entries = NULL},
-  {.size = 1024, .free_entries = NULL},
-  {.size = 2048, .free_entries = NULL},
+    {.size = 32, .free_entries = NULL},   {.size = 128, .free_entries = NULL},
+    {.size = 512, .free_entries = NULL},  {.size = 1024, .free_entries = NULL},
+    {.size = 2048, .free_entries = NULL},
 };
 
-#define REMOVE_KMALLOC_ENTRY(x) ((void *) ((intptr_t) x + sizeof(struct KmallocEntry )))
-#define GET_KMALLOC_ENTRY(x) ((struct KmallocEntry *) ((intptr_t) x - sizeof(struct KmallocEntry )))
+#define REMOVE_KMALLOC_ENTRY(x) \
+  ((void *)((intptr_t)x + sizeof(struct KmallocEntry)))
+#define GET_KMALLOC_ENTRY(x) \
+  ((struct KmallocEntry *)((intptr_t)x - sizeof(struct KmallocEntry)))
 
-void* kmalloc(uint32_t size) {
-  for(int i = 0; i < NUM_POOLS; i++) {
-    struct KmallocPool* p = &kmalloc_pools[i];
-    if(p->size < size + sizeof(struct KmallocEntry)) {
+void *kmalloc(uint32_t size) {
+  for (int i = 0; i < NUM_POOLS; i++) {
+    struct KmallocPool *p = &kmalloc_pools[i];
+    if (p->size < size + sizeof(struct KmallocEntry)) {
       continue;
     }
 
-    if(!p->free_entries) {
+    if (!p->free_entries) {
       void *page = Page::AllocKernHeapPage();
-      for(unsigned j = 0; j < Page::PAGE_SIZE / p->size; j++) {
-        struct FreeEntry *entry = (struct FreeEntry *) ((intptr_t) page + p->size*j);
+      for (unsigned j = 0; j < Page::PAGE_SIZE / p->size; j++) {
+        struct FreeEntry *entry =
+            (struct FreeEntry *)((intptr_t)page + p->size * j);
         entry->prev = p->free_entries;
         p->free_entries = entry;
       }
@@ -49,7 +50,7 @@ void* kmalloc(uint32_t size) {
 
     printc("Alloced in Pool Size: %u\n", p->size);
 
-    struct KmallocEntry *entry = (struct KmallocEntry *) p->free_entries;
+    struct KmallocEntry *entry = (struct KmallocEntry *)p->free_entries;
     p->free_entries = p->free_entries->prev;
     entry->size = size;
     entry->pool = p;
@@ -57,30 +58,31 @@ void* kmalloc(uint32_t size) {
     return REMOVE_KMALLOC_ENTRY(entry);
   }
 
-
   // If the malloc request can't fit within a pool, allocate space just for it.
-  uint32_t alloced = ROUND_UP(size + sizeof(struct KmallocEntry), Page::PAGE_SIZE);
+  uint32_t alloced =
+      ROUND_UP(size + sizeof(struct KmallocEntry), Page::PAGE_SIZE);
   printc("Large Allocation: %u\n", alloced);
-  struct KmallocEntry *entry = (struct KmallocEntry *) Page::AllocKernHeap(alloced);
+  struct KmallocEntry *entry =
+      (struct KmallocEntry *)Page::AllocKernHeap(alloced);
   entry->size = size;
   entry->pool = NULL;
   return REMOVE_KMALLOC_ENTRY(entry);
 }
 
-
 void kfree(void *ptr) {
   struct KmallocEntry *entry = GET_KMALLOC_ENTRY(ptr);
 
-  if(entry->pool) {
-    struct KmallocPool* p = entry->pool;
+  if (entry->pool) {
+    struct KmallocPool *p = entry->pool;
     printc("Freeing from pool: %u\n", p->size);
-    struct FreeEntry *fentry = (struct FreeEntry *) entry;
+    struct FreeEntry *fentry = (struct FreeEntry *)entry;
     fentry->prev = p->free_entries;
     p->free_entries = fentry;
     return;
   }
 
-  uint32_t alloced = ROUND_UP(entry->size + sizeof(struct KmallocEntry), Page::PAGE_SIZE);
+  uint32_t alloced =
+      ROUND_UP(entry->size + sizeof(struct KmallocEntry), Page::PAGE_SIZE);
   printc("Freeing large allocation: %u\n", alloced);
-  Page::FreeKernHeap((void*) entry, alloced);
+  Page::FreeKernHeap((void *)entry, alloced);
 }

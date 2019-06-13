@@ -3,6 +3,7 @@
 #include "arch/x86_64/arch.h"
 #include "printk.h"
 #include "stdlib.h"
+#include "syscall/x86_64/syscall_arch.h"
 
 #define IDT_SIZE 256
 #define EXCEPTION_STACK_SIZE 1024
@@ -23,6 +24,7 @@
 #define TYPE_TRAP 0xF
 
 extern "C" {
+extern void irq_0(void);
 extern void irq_1(void);
 extern void irq_2(void);
 extern void irq_3(void);
@@ -71,11 +73,12 @@ extern void irq_44(void);
 extern void irq_45(void);
 extern void irq_46(void);
 extern void irq_47(void);
+extern void irq_48(void);
 }
 
-uint8_t gp_stack[EXCEPTION_STACK_SIZE];
-uint8_t df_stack[EXCEPTION_STACK_SIZE];
-uint8_t pf_stack[EXCEPTION_STACK_SIZE];
+uint8_t gp_stack[EXCEPTION_STACK_SIZE] __attribute__((aligned(0x10)));
+uint8_t df_stack[EXCEPTION_STACK_SIZE] __attribute__((aligned(0x10)));
+uint8_t pf_stack[EXCEPTION_STACK_SIZE] __attribute__((aligned(0x10)));
 
 struct IDT_entry {
   uint16_t tar_offset_1;
@@ -93,7 +96,7 @@ struct IDT_entry {
 
 struct IDT_entry IDT[IDT_SIZE];
 
-void (*IRQ_handlers[IDT_SIZE])(unsigned int, unsigned int);
+void (*IRQ_handlers[IDT_SIZE])(uint32_t, uint32_t);
 
 static inline void load_idt(struct IDT_entry *idt, uint16_t size) {
   struct {
@@ -117,7 +120,13 @@ static inline void init_idt(struct IDT_entry *idt, void (*handler)(void),
   idt->p = 1;
 }
 
-extern "C" void irq_handler(uint32_t num, uint32_t err) {
+extern "C" void irq_handler(uint32_t num, uint32_t err,
+                            struct IRQ_Frame *frame) {
+  if (num == SYSCALL_IRQ) {
+    syscall_handler(num, err, frame);
+    return;
+  }
+
   if (!IRQ_handlers[num]) {
     printk("FATAL: Unhandled IRQ %u Called (Err %u)!\n", num, err);
     while (1) {
@@ -167,7 +176,7 @@ void irq_maskall() {
   outb(PIC_MASTER_DATA_REG, 0xF);
 }
 
-void IRQ::Register(int num, void (*hndlr)(unsigned int, unsigned int)) {
+void IRQ::Register(int num, void (*hndlr)(uint32_t, uint32_t)) {
   IRQ_handlers[num] = hndlr;
 }
 
@@ -175,53 +184,55 @@ void IRQ::Init() {
   memset(IDT, 0, sizeof(struct IDT_entry) * IDT_SIZE);
   memset(IDT, 0, sizeof(IRQ_handlers));
 
-  init_idt(&IDT[1], irq_1, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[2], irq_2, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[3], irq_3, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[4], irq_4, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[5], irq_5, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[6], irq_6, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[7], irq_7, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[8], irq_8, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[9], irq_9, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[10], irq_10, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[11], irq_11, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[12], irq_12, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[13], irq_13, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[14], irq_14, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[15], irq_15, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[16], irq_16, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[17], irq_17, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[18], irq_18, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[19], irq_18, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[20], irq_20, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[21], irq_21, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[22], irq_22, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[23], irq_23, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[24], irq_24, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[25], irq_25, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[26], irq_26, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[27], irq_27, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[28], irq_28, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[29], irq_29, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[30], irq_30, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[31], irq_31, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[32], irq_32, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[33], irq_33, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[34], irq_34, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[35], irq_35, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[36], irq_36, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[37], irq_37, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[38], irq_38, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[39], irq_39, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[40], irq_40, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[41], irq_41, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[42], irq_42, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[43], irq_43, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[44], irq_44, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[45], irq_45, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[46], irq_46, 0x8, TYPE_IRQ, 0);
-  init_idt(&IDT[47], irq_47, 0x8, TYPE_IRQ, 0);
+  init_idt(&IDT[0], irq_0, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[1], irq_1, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[2], irq_2, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[3], irq_3, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[4], irq_4, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[5], irq_5, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[6], irq_6, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[7], irq_7, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[8], irq_8, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[9], irq_9, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[10], irq_10, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[11], irq_11, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[12], irq_12, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[13], irq_13, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[14], irq_14, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[15], irq_15, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[16], irq_16, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[17], irq_17, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[18], irq_18, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[19], irq_18, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[20], irq_20, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[21], irq_21, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[22], irq_22, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[23], irq_23, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[24], irq_24, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[25], irq_25, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[26], irq_26, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[27], irq_27, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[28], irq_28, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[29], irq_29, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[30], irq_30, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[31], irq_31, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[32], irq_32, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[33], irq_33, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[34], irq_34, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[35], irq_35, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[36], irq_36, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[37], irq_37, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[38], irq_38, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[39], irq_39, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[40], irq_40, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[41], irq_41, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[42], irq_42, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[43], irq_43, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[44], irq_44, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[45], irq_45, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[46], irq_46, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[47], irq_47, GDT::CS_SEG, TYPE_IRQ, 0);
+  init_idt(&IDT[48], irq_48, GDT::CS_SEG, TYPE_IRQ, 0);
 
   // Setup independant stacks for special processor execeptions
   IDT[DF_FAULT].ist = 1;

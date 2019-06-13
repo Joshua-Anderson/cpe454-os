@@ -1,11 +1,11 @@
 #include "arch/ArchInit.h"
 #include "arch/Platform.h"
-#include "drivers/char/x86_64/PS2.h"
 #include "irq/IRQ.h"
+#include "kmalloc.h"
 #include "mm/Frame.h"
 #include "mm/Page.h"
 #include "printk.h"
-#include "kmalloc.h"
+#include "syscall/syscall.h"
 
 extern "C" void kmain(uint32_t, void *);
 
@@ -31,6 +31,9 @@ void kmain(uint32_t mb_magic, void *mb_header) {
   void *huge = kmalloc(6000);
   printc("Huge Adder: %p\n", huge);
   kfree(huge);
+
+  Platform::GetDflInput()->GetChar();
+  thread_yield();
 
   printk("> ");
 

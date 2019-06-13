@@ -26,14 +26,17 @@ C_HDR := $(wildcard arch/*.h \
 					drivers/display/*.h drivers/display/$(ARCH)/*.h \
 					drivers/char/*.h drivers/char/$(ARCH)/*.h \
 					irq/*.h \
-					mm/*.h)
+					mm/*.h \
+					syscall/*.h \
+					syscall/$(ARCH)/*.h)
 C_SRC := $(wildcard arch/$(ARCH)/*.cpp \
 					init/*.cpp lib/*.cpp \
 					drivers/display/$(ARCH)/*.cpp \
 					drivers/char/$(ARCH)/*.cpp \
 					irq/$(ARCH)/*.cpp \
 					mm/*.cpp \
-					mm/$(ARCH)/*.cpp)
+					mm/$(ARCH)/*.cpp \
+					syscall/$(ARCH)/*.cpp)
 
 C_OBJ := $(patsubst %.cpp, out/%.o, $(C_SRC))
 
@@ -99,5 +102,9 @@ out/mm/%.o: mm/%.cpp
 	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
 
 out/mm/$(ARCH)/%.o: mm/$(ARCH)/%.cpp
+	@mkdir -p $(shell dirname $@)
+	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
+
+out/syscall/$(ARCH)/%.o: syscall/$(ARCH)/%.cpp
 	@mkdir -p $(shell dirname $@)
 	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@

@@ -65,7 +65,7 @@ static inline void poll_ps2_inb(uint8_t val) {
   }
 }
 
-void PS2_irq_handler(unsigned int, unsigned int) {
+void PS2_irq_handler(uint32_t, uint32_t) {
   buf[buf_prod] = inb(PS2_DATA_REG);
   BUF_INC(buf_prod);
 

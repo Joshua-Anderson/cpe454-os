@@ -1,12 +1,12 @@
 %macro irq_handle_code 1
   global irq_%1
   irq_%1:
+    push rdi
+    push rsi
+    push rdx
     push rax
     push rbx
     push rcx
-    push rdx
-    push rsi
-    push rdi
     push rbp
     push r8
     push r9
@@ -17,7 +17,9 @@
     push r14
     push r15
     mov edi, %1
-    mov esi, [rsp+1024]
+    mov esi, [rsp+120]
+    mov rdx, rsp
+    add rdx, 128
     call irq_handler
     pop r15
     pop r14
@@ -28,12 +30,12 @@
     pop r9
     pop r8
     pop rbp
-    pop rdi
-    pop rsi
-    pop rdx
     pop rcx
     pop rbx
     pop rax
+    pop rdx
+    pop rsi
+    pop rdi
     add rsp, 8 ; Remove Error Code From Stack
     iretq
 %endmacro
@@ -41,12 +43,12 @@
 %macro irq_handle_wo_code 1
   global irq_%1
   irq_%1:
+    push rdi
+    push rsi
+    push rdx
     push rax
     push rbx
     push rcx
-    push rdx
-    push rsi
-    push rdi
     push rbp
     push r8
     push r9
@@ -58,6 +60,8 @@
     push r15
     mov edi, %1
     mov esi, 0
+    mov rdx, rsp
+    add rdx, 120
     call irq_handler
     pop r15
     pop r14
@@ -68,12 +72,12 @@
     pop r9
     pop r8
     pop rbp
-    pop rdi
-    pop rsi
-    pop rdx
     pop rcx
     pop rbx
     pop rax
+    pop rdx
+    pop rsi
+    pop rdi
     iretq
 %endmacro
 
@@ -130,3 +134,4 @@ irq_handle_wo_code 44
 irq_handle_wo_code 45
 irq_handle_wo_code 46
 irq_handle_wo_code 47
+irq_handle_wo_code 48

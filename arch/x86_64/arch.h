@@ -9,6 +9,7 @@
 
 #define PS2_IRQ 33
 #define SERIAL_IRQ 36
+#define SYSCALL_IRQ 48
 
 extern "C" {
 
@@ -24,7 +25,12 @@ inline uint8_t inb(uint16_t port) {
 
 #define get_reg(reg, var) asm volatile("movq %%" reg ", %0" : "=r"(var) :)
 
-#define set_reg(reg, var) asm("movq %0, %%" reg : : "r"(var));
+#define set_reg(reg, var) asm volatile("movq %0, %%" reg : : "r"(var) : reg);
+#define set_reg_no_clobber(reg, var) \
+  asm volatile("movq %0, %%" reg : : "r"(var));
+
+// TODO: Figure how to pass syscall number (48) as constant in inline assembly
+inline void trap() { asm volatile("int $48"); }
 
 inline void hlt() { asm volatile("hlt" : :); }
 }

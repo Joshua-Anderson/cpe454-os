@@ -85,7 +85,7 @@ static int buf_consumer = 0;
 
 inline void serial_tx(char c) { outb(SERIAL_DATA_REG, c); }
 
-void serial_irq_handler(unsigned int, unsigned int) {
+void serial_irq_handler(uint32_t, uint32_t) {
   uint8_t iir_dat = inb(SERIAL_II_REG);
   struct IIR* iir = (struct IIR*)&iir_dat;
 
