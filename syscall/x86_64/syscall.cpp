@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#include "../syscall.h"
+#include "../SysCall.h"
 #include "arch/x86_64/arch.h"
 #include "printk.h"
 #include "proc/Scheduler.h"
@@ -10,11 +10,6 @@
 #define SYSCALL_YIELD_NUM 1L
 #define SYSCALL_EXIT_NUM 2L
 #define SYSCALL_RUN_NUM 3L
-
-void thread_yield() {
-  set_reg("rdi", SYSCALL_YIELD_NUM);
-  trap();
-}
 
 static void syscall_yield(struct IRQ_Frame* frame) {
   Process* cur_proc = Scheduler::CurProc();
@@ -28,11 +23,6 @@ static void syscall_yield(struct IRQ_Frame* frame) {
   new_proc->Load(frame);
 }
 
-void thread_exit() {
-  set_reg("rdi", SYSCALL_EXIT_NUM);
-  trap();
-}
-
 static void syscall_exit(struct IRQ_Frame* frame) {
   // Remove and resechedule the next thread
   Process* new_proc = Scheduler::Reschedule(1);
@@ -43,11 +33,6 @@ static void syscall_exit(struct IRQ_Frame* frame) {
 
   // Return to the parent
   Scheduler::parent_proc.Load(frame);
-}
-
-void thread_run() {
-  set_reg("rdi", SYSCALL_RUN_NUM);
-  trap();
 }
 
 static void syscall_run(struct IRQ_Frame* frame) {
@@ -70,7 +55,6 @@ static inline uint64_t get_param(struct IRQ_Frame* frame, int num) {
 void syscall_handler(uint32_t, uint32_t, struct IRQ_Frame* frame) {
   // RDI holds the system call number and is on the stack before the frame
   uint64_t num = get_param(frame, 0);
-  printk("Syscall Num %lx\n", num);
 
   switch (num) {
     case SYSCALL_YIELD_NUM:
@@ -83,6 +67,22 @@ void syscall_handler(uint32_t, uint32_t, struct IRQ_Frame* frame) {
       syscall_run(frame);
       break;
     default:
+      FATAL("Unknown System Call %lu", num);
       break;
   }
+}
+
+void SysCall::ProcYield() {
+  set_reg("rdi", SYSCALL_YIELD_NUM);
+  trap();
+}
+
+void SysCall::ProcExit() {
+  set_reg("rdi", SYSCALL_EXIT_NUM);
+  trap();
+}
+
+void SysCall::ProcRun() {
+  set_reg("rdi", SYSCALL_RUN_NUM);
+  trap();
 }

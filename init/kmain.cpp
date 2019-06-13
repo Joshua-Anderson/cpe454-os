@@ -8,24 +8,19 @@
 #include "mm/Page.h"
 #include "printk.h"
 #include "proc/Scheduler.h"
-#include "syscall/syscall.h"
+#include "syscall/SysCall.h"
 
 void thread1(void *) {
   printk("Hello from thread 1!\n");
-  thread_exit();
+  SysCall::ProcExit();
 }
 
 void thread2(void *) {
   printk("Hello from thread 2!\n");
-  thread_exit();
+  SysCall::ProcExit();
 }
 
 void kmain() {
-  printk("Display only...\n");
-  printc("Console only...\n");
-  printa("Both...\n");
-  printa("Really long test testing testing one two three four...\n");
-
   void *small = kmalloc(3);
   printc("Small Adder: %p\n", small);
   void *med = kmalloc(200);
@@ -44,7 +39,7 @@ void kmain() {
   Scheduler::Add(thread2, NULL);
   while (1) {
     printk("Running Threads...\n");
-    thread_run();
+    SysCall::ProcRun();
     printk("Threads done...\n");
     IRQ::BlockForIRQ();
   }

@@ -119,7 +119,7 @@ void* Frame::AllocZeroed() {
 
 void Frame::Free(void* frame) {
   if ((intptr_t)frame % Frame::FRAME_SIZE) {
-    printk("Error: Attempted to free invalid frame address 0x%p", frame);
+    ERROR("Attempted to free invalid frame address 0x%p", frame);
     return;
   }
 

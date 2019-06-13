@@ -87,10 +87,8 @@ void pf_irq_handler(uint32_t, uint32_t err) {
   get_reg("cr2", fault_addr);
 
   if (PAGE_ERR_P(err)) {
-    printk("Fatal Page Fault: Addr 0x%lx (Usr: %d, Write: %d, Present: %d)\n",
-           fault_addr, !!PAGE_ERR_USR(err), !!PAGE_ERR_W(err),
-           !!PAGE_ERR_P(err));
-    hlt();
+    FATAL("Unhandlible page fault err at addr 0x%lx (Usr: %d, Write: %d, Present: %d)",
+           fault_addr, !!PAGE_ERR_USR(err), !!PAGE_ERR_W(err), !!PAGE_ERR_P(err));
   }
 
   struct PTEntry* pt;
@@ -103,8 +101,7 @@ void pf_irq_handler(uint32_t, uint32_t err) {
 
   if (!ptlook.l4->p || !ptlook.l3->p || !ptlook.l2->avl_1 ||
       !ptlook.l1->avl_1) {
-    printk("FATAL: Page fault on unallocated address %lx\n", fault_addr);
-    hlt();
+    FATAL("Page fault on unallocated address %lx\n", fault_addr);
   }
 
   if (!ptlook.l2->p) {
@@ -140,7 +137,7 @@ void Page::InitIdentityMap() {
 
 static int alloc_virt_4k_chunk(struct PTEntry* pt, void* start, void* end) {
   if ((intptr_t)start % Page::PAGE_SIZE || (intptr_t)end % Page::PAGE_SIZE) {
-    printk("ERROR: Unaligned memory allocation %p->%p\n", start, end);
+    ERROR("Unaligned memory allocation %p->%p", start, end);
     return 1;
   }
 
@@ -152,7 +149,7 @@ static int alloc_virt_4k_chunk(struct PTEntry* pt, void* start, void* end) {
     walkPageTable(pt, &ptoff, &ptlook);
 
     if (!ptlook.l4->p) {
-      printk("ERROR: Unalloced Page Table Level 4 Segment %p\n", pos);
+      ERROR("Unalloced Page Table Level 4 Segment %p", pos);
       return 1;
     }
 
@@ -190,7 +187,7 @@ static int alloc_virt_4k_chunk(struct PTEntry* pt, void* start, void* end) {
 
 static int free_virt_4k_chunk(struct PTEntry* pt, void* start, void* end) {
   if ((intptr_t)start % Page::PAGE_SIZE || (intptr_t)end % Page::PAGE_SIZE) {
-    printk("ERROR: Unaligned memory free %p->%p\n", start, end);
+    ERROR("Unaligned memory free %p->%p", start, end);
     return 1;
   }
 
@@ -202,8 +199,7 @@ static int free_virt_4k_chunk(struct PTEntry* pt, void* start, void* end) {
     walkPageTable(pt, &ptoff, &ptlook);
 
     if (!ptlook.l4->p) {
-      printk("ERROR: Unalloced Page Table Level 4 Segment %p while freeing\n",
-             pos);
+      ERROR("Unalloced Page Table Level 4 Segment %p while freeing", pos);
       return 1;
     }
 

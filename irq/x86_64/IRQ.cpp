@@ -128,10 +128,7 @@ extern "C" void irq_handler(uint32_t num, uint32_t err,
   }
 
   if (!IRQ_handlers[num]) {
-    printk("FATAL: Unhandled IRQ %u Called (Err %u)!\n", num, err);
-    while (1) {
-      hlt();
-    };
+    FATAL("Unregistered IRQ %u Called", num);
   }
 
   IRQ_handlers[num](num, err);
