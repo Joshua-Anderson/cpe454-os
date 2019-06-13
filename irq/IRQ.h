@@ -11,6 +11,7 @@ class IRQ {
   static void SetMask(int);
   static void ClearMask(int);
   static void Register(int, void (*hndlr)(uint32_t, uint32_t));
+  static void BlockForIRQ();
 };
 
 #endif

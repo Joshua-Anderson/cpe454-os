@@ -262,3 +262,5 @@ void IRQ::Init() {
   load_idt(IDT, sizeof(struct IDT_entry) * (IDT_SIZE - 1));
   IRQ::Enable();
 }
+
+void IRQ::BlockForIRQ() { hlt(); }

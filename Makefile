@@ -4,7 +4,7 @@ CROSS_LD ?= /usr/local/454-cross/bin/x86_64-elf-ld
 
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
-override CPPFLAGS+=-Wall -Wextra -Werror -ffreestanding -fno-exceptions -fno-threadsafe-statics -fno-rtti -lgcc -I$(ROOT_DIR) -Ilib -Ilib/$(ARCH)
+override CPPFLAGS+=-Wall -Wextra -Werror -ffreestanding -fno-exceptions -fno-threadsafe-statics -fno-rtti -lgcc -I$(ROOT_DIR) -Ilib -Ilib/$(ARCH) -Iproc/$(ARCH)
 override QEMUFLAGS+=-serial stdio
 
 ifeq ($(DEBUG),y)
@@ -28,7 +28,9 @@ C_HDR := $(wildcard arch/*.h \
 					irq/*.h \
 					mm/*.h \
 					syscall/*.h \
-					syscall/$(ARCH)/*.h)
+					syscall/$(ARCH)/*.h \
+					proc/*.h \
+					proc/$(ARCH)/*.h)
 C_SRC := $(wildcard arch/$(ARCH)/*.cpp \
 					init/*.cpp lib/*.cpp \
 					drivers/display/$(ARCH)/*.cpp \
@@ -36,7 +38,8 @@ C_SRC := $(wildcard arch/$(ARCH)/*.cpp \
 					irq/$(ARCH)/*.cpp \
 					mm/*.cpp \
 					mm/$(ARCH)/*.cpp \
-					syscall/$(ARCH)/*.cpp)
+					syscall/$(ARCH)/*.cpp \
+					proc/$(ARCH)/*.cpp)
 
 C_OBJ := $(patsubst %.cpp, out/%.o, $(C_SRC))
 
@@ -106,5 +109,9 @@ out/mm/$(ARCH)/%.o: mm/$(ARCH)/%.cpp
 	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
 
 out/syscall/$(ARCH)/%.o: syscall/$(ARCH)/%.cpp
+	@mkdir -p $(shell dirname $@)
+	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
+
+out/proc/$(ARCH)/%.o: proc/$(ARCH)/%.cpp
 	@mkdir -p $(shell dirname $@)
 	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@

@@ -244,14 +244,15 @@ void* Page::AllocKernStackMem() {
     return NULL;
   }
   Page::KernStackPos = (uint64_t)end;
-  return start;
+  // Stack grows up, return address to bottom of stack
+  return end;
 }
 
 void Page::FreeKernStackMem(void* addr) {
   struct PTEntry* curPT;
   get_reg("cr3", curPT);
-  free_virt_4k_chunk(curPT, addr,
-                     (void*)((intptr_t)addr + Page::KTHREAD_STACK_SIZE));
+  free_virt_4k_chunk(curPT, (void*)((intptr_t)addr - Page::KTHREAD_STACK_SIZE),
+                     addr);
 }
 
 uint64_t Page::KernHeapPos = Page::KHEAP_START_ADDR;

@@ -1,6 +1,7 @@
 %macro irq_handle_code 1
   global irq_%1
   irq_%1:
+    ; Don't change the order of this without updating thread loading and saving order
     push rdi
     push rsi
     push rdx
@@ -43,6 +44,7 @@
 %macro irq_handle_wo_code 1
   global irq_%1
   irq_%1:
+    ; Don't change the order of this without updating thread loading and saving order
     push rdi
     push rsi
     push rdx

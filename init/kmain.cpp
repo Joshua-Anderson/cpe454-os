@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 #include "arch/ArchInit.h"
 #include "arch/Platform.h"
 #include "irq/IRQ.h"
@@ -5,9 +7,20 @@
 #include "mm/Frame.h"
 #include "mm/Page.h"
 #include "printk.h"
+#include "proc/Scheduler.h"
 #include "syscall/syscall.h"
 
 extern "C" void kmain(uint32_t, void *);
+
+void thread1(void *) {
+  printk("Hello from thread 1!\n");
+  thread_exit();
+}
+
+void thread2(void *) {
+  printk("Hello from thread 2!\n");
+  thread_exit();
+}
 
 void kmain(uint32_t mb_magic, void *mb_header) {
   printk("Loading Project SOL v0.alpha...\n");
@@ -33,7 +46,14 @@ void kmain(uint32_t mb_magic, void *mb_header) {
   kfree(huge);
 
   Platform::GetDflInput()->GetChar();
-  thread_yield();
+  Scheduler::Add(thread1, NULL);
+  Scheduler::Add(thread2, NULL);
+  while (1) {
+    printk("Running Threads...\n");
+    thread_run();
+    printk("Threads done...\n");
+    IRQ::BlockForIRQ();
+  }
 
   printk("> ");
 
