@@ -2,6 +2,7 @@
 #define __PROCESS_H__
 
 #include <stdint.h>
+#include <stddef.h>
 
 #include "syscall/x86_64/syscall_arch.h"
 
@@ -18,7 +19,7 @@ enum ProcState { RUNNING, RUNABLE };
 
 class Process {
  public:
-  // Global Process Interface (to be implemented by every arch)
+  // Generic Process Interface (to be implemented by every arch)
   // Ideally there would be an generic abstract process class and a arch
   // specific implmentation Virtual classes make the scheduler harder to work
   // with though, since it makes classes harder to instanciate and genericise.
@@ -29,8 +30,13 @@ class Process {
   // x86_64 Specific Functions
   void Save(struct IRQ_Frame *);
   void Load(struct IRQ_Frame *);
+  void Destroy();
 
  private:
+  // Generic Variables
+  void *initial_stack = NULL;
+
+  // x86_64 Specific Variables
   struct Regs regs = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 };

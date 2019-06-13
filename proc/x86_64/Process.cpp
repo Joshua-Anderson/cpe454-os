@@ -14,7 +14,8 @@ Process::Process(kentry_t entry, void* arg) {
   Process::regs.rip = (uint64_t)entry;
   Process::regs.rdx = (uint64_t)arg;
   Process::regs.cs = GDT::CS_SEG;
-  Process::regs.rsp = (uint64_t)Page::AllocKernStackMem();
+  Process::initial_stack = Page::AllocKernStackMem();
+  Process::regs.rsp = (uint64_t) Process::initial_stack;
   Process::State = RUNABLE;
 }
 
@@ -37,4 +38,9 @@ void Process::Save(struct IRQ_Frame* frame) {
   Process::regs.rsp = frame->rsp;
   Process::regs.ss = frame->ss;
   Process::State = RUNABLE;
+}
+
+void Process::Destroy() {
+  Page::FreeKernStackMem(Process::initial_stack);
+  Process::initial_stack = NULL;
 }

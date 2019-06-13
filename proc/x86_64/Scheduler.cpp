@@ -34,6 +34,7 @@ Process *Scheduler::Reschedule(int remove) {
   if (remove) {
     // Removing last process from list
     if (Scheduler::cur_proc == Scheduler::cur_proc->nxt) {
+      Scheduler::cur_proc->proc.Destroy();
       kfree(Scheduler::cur_proc);
       Scheduler::cur_proc = NULL;
       return NULL;
@@ -41,6 +42,7 @@ Process *Scheduler::Reschedule(int remove) {
     struct ProcQueueEntry *tmp = Scheduler::cur_proc->prev;
     tmp->prev->nxt = tmp->nxt;
     tmp->nxt->prev = tmp->prev;
+    tmp->proc.Destroy();
     kfree(tmp);
   }
 
