@@ -3,25 +3,28 @@
 #include "../Scheduler.h"
 #include "kmalloc.h"
 
+unsigned Scheduler::nxt_pid = 0;
 struct ProcQueueEntry *Scheduler::cur_proc = NULL;
-Process Scheduler::parent_proc = Process();
+Process Scheduler::parent_proc = Process(-1);
 
-void Scheduler::Add(kentry_t entry, void *arg) {
+Process *Scheduler::Add(kentry_t entry, void *arg) {
   struct ProcQueueEntry *p =
       (struct ProcQueueEntry *)kmalloc(sizeof(struct ProcQueueEntry));
-  p->proc = Process(entry, arg);
+  p->proc = Process(Scheduler::nxt_pid, entry, arg);
+  Scheduler::nxt_pid++;
   p->nxt = p;
   p->prev = p;
 
   if (!Scheduler::cur_proc) {
     Scheduler::cur_proc = p;
-    return;
+    return &p->proc;
   }
 
   p->nxt = Scheduler::cur_proc->nxt;
   p->prev = Scheduler::cur_proc;
   p->nxt->prev = p;
   Scheduler::cur_proc->nxt = p;
+  return &p->proc;
 }
 
 Process *Scheduler::Reschedule(int remove) {

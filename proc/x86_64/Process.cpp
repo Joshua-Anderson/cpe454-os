@@ -8,14 +8,15 @@
 #define NUM_STACK_REGS 15
 #define STACK_REGS_SIZE (sizeof(uint64_t) * NUM_STACK_REGS)
 
-Process::Process() {}
+Process::Process(unsigned pid) { Process::pid = pid; }
 
-Process::Process(kentry_t entry, void* arg) {
+Process::Process(unsigned pid, kentry_t entry, void* arg) {
+  Process::pid = pid;
   Process::regs.rip = (uint64_t)entry;
   Process::regs.rdx = (uint64_t)arg;
   Process::regs.cs = GDT::CS_SEG;
   Process::initial_stack = Page::AllocKernStackMem();
-  Process::regs.rsp = (uint64_t) Process::initial_stack;
+  Process::regs.rsp = (uint64_t)Process::initial_stack;
   Process::State = RUNABLE;
 }
 

@@ -11,12 +11,13 @@ struct ProcQueueEntry {
 
 class Scheduler {
  public:
-  static void Add(kentry_t entry, void* arg);
+  static Process* Add(kentry_t entry, void* arg);
   static Process* Reschedule(int remove);
   static Process* CurProc();
   static Process parent_proc;
 
  private:
+  static unsigned nxt_pid;
   static struct ProcQueueEntry* cur_proc;
 };
 

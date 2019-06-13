@@ -87,8 +87,10 @@ void pf_irq_handler(uint32_t, uint32_t err) {
   get_reg("cr2", fault_addr);
 
   if (PAGE_ERR_P(err)) {
-    FATAL("Unhandlible page fault err at addr 0x%lx (Usr: %d, Write: %d, Present: %d)",
-           fault_addr, !!PAGE_ERR_USR(err), !!PAGE_ERR_W(err), !!PAGE_ERR_P(err));
+    FATAL(
+        "Unhandlible page fault err at addr 0x%lx (Usr: %d, Write: %d, "
+        "Present: %d)",
+        fault_addr, !!PAGE_ERR_USR(err), !!PAGE_ERR_W(err), !!PAGE_ERR_P(err));
   }
 
   struct PTEntry* pt;

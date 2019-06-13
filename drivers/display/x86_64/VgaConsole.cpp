@@ -1,10 +1,6 @@
 #include "VgaConsole.h"
-#include "../Color.h"
 #include "stdint.h"
 #include "stdlib.h"
-
-#define VGA_BUF_START 0xb8000
-#define TAB_SIZE 4
 
 struct VgaChar {
   char cp;
@@ -13,33 +9,51 @@ struct VgaChar {
   uint8_t blink : 1;
 } __attribute__((__packed__));
 
+#define VGA_BUF_START 0xb8000
+#define TAB_SIZE 4
+
+static struct VgaChar* vga_console = (struct VgaChar*)VGA_BUF_START;
+
+static inline void clear_vga_char(unsigned pos) {
+  vga_console[pos].blink = 0;
+  vga_console[pos].cp = ' ';
+}
+
 bool VgaConsole::Scroll() {
   if (VgaConsole::pos < VgaConsole::cols * VgaConsole::rows) {
     return false;
   }
 
-  struct VgaChar* c = (struct VgaChar*)VGA_BUF_START;
-  memcpy(c, c + VgaConsole::cols,
+  memcpy(vga_console, vga_console + VgaConsole::cols,
          VgaConsole::cols * (VgaConsole::rows - 1) * sizeof(struct VgaChar));
 
   VgaConsole::pos = VgaConsole::cols * (VgaConsole::rows - 1);
 
-  for (int i = VgaConsole::pos; i < VgaConsole::pos + VgaConsole::cols; i++) {
-    c[i].cp = ' ';
+  for (unsigned i = VgaConsole::pos; i < VgaConsole::pos + VgaConsole::cols;
+       i++) {
+    clear_vga_char(i);
   }
 
   return true;
 }
 
-void VgaConsole::PrintChar(char in) {
-  struct VgaChar* c = (struct VgaChar*)VGA_BUF_START;
+void VgaConsole::PrintChar(char in, uint8_t fg, uint8_t bg, unsigned row,
+                           unsigned col) {
+  unsigned p = (row * VgaConsole::cols) + col;
+  vga_console[p].blink = 0;
+  vga_console[p].bg_color = bg;
+  vga_console[p].fg_color = fg;
+  vga_console[p].cp = in;
+}
 
+void VgaConsole::PrintChar(char in, uint8_t fg, uint8_t bg) {
   switch (in) {
     case '\n':
       VgaConsole::pos += VgaConsole::cols - VgaConsole::pos % VgaConsole::cols;
       VgaConsole::Scroll();
       break;
     case '\b':
+      clear_vga_char(VgaConsole::pos);
       VgaConsole::pos--;
       break;
     case '\t':
@@ -51,10 +65,25 @@ void VgaConsole::PrintChar(char in) {
       break;
     default:
       VgaConsole::Scroll();
-      c[VgaConsole::pos].blink = 0;
-      c[VgaConsole::pos].bg_color = Color::Black;
-      c[VgaConsole::pos].fg_color = Color::White;
-      c[VgaConsole::pos].cp = in;
+      vga_console[VgaConsole::pos].blink = 0;
+      vga_console[VgaConsole::pos].bg_color = bg;
+      vga_console[VgaConsole::pos].fg_color = fg;
+      vga_console[VgaConsole::pos].cp = in;
       VgaConsole::pos++;
   }
 }
+
+void VgaConsole::PrintChar(char in) {
+  VgaConsole::PrintChar(in, VgaConsole::fg, VgaConsole::bg);
+}
+
+void VgaConsole::Clear() {
+  for (unsigned i = 0; i < VgaConsole::rows * VgaConsole::cols; i++) {
+    clear_vga_char(i);
+  }
+  VgaConsole::pos = 0;
+}
+
+unsigned VgaConsole::Rows() { return VgaConsole::rows; }
+
+unsigned VgaConsole::Cols() { return VgaConsole::cols; }

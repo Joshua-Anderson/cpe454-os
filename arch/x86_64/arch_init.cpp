@@ -99,6 +99,7 @@ void init_mem_regions(struct mb_info* mbinfo) {
 }
 
 void kinit_x86_64(uint32_t mb_magic, void* mb_header) {
+  Platform::GetDflDisplay()->Clear();
   printk("Loading Project SOL v0.alpha...\n");
   INIT("GDT ", GDT::InitGDT());
   INIT("TSS ", GDT::InitTSS());

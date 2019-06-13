@@ -1,8 +1,8 @@
 #ifndef __PROCESS_H__
 #define __PROCESS_H__
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include "syscall/x86_64/syscall_arch.h"
 
@@ -23,8 +23,9 @@ class Process {
   // Ideally there would be an generic abstract process class and a arch
   // specific implmentation Virtual classes make the scheduler harder to work
   // with though, since it makes classes harder to instanciate and genericise.
-  Process();
-  Process(kentry_t, void *);
+  Process(unsigned pid);
+  Process(unsigned pid, kentry_t, void *);
+  unsigned GetPid() { return Process::pid; }
   ProcState State;
 
   // x86_64 Specific Functions
@@ -34,6 +35,7 @@ class Process {
 
  private:
   // Generic Variables
+  unsigned pid;
   void *initial_stack = NULL;
 
   // x86_64 Specific Variables

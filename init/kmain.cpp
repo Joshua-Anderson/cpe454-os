@@ -8,6 +8,7 @@
 #include "mm/Page.h"
 #include "printk.h"
 #include "proc/Scheduler.h"
+#include "snakes.h"
 #include "syscall/SysCall.h"
 
 void thread1(void *) {
@@ -35,8 +36,7 @@ void kmain() {
   kfree(huge);
 
   Platform::GetDflInput()->GetChar();
-  Scheduler::Add(thread1, NULL);
-  Scheduler::Add(thread2, NULL);
+  setup_snakes(0);
   while (1) {
     printk("Running Threads...\n");
     SysCall::ProcRun();

@@ -126,6 +126,17 @@ void SerialConsole::PrintChar(char c) {
   IRQ::Enable();
 }
 
+void SerialConsole::Clear() {
+  // Attempt ASCII escape clear
+  SerialConsole::PrintChar(27);
+  SerialConsole::PrintChar('[');
+  SerialConsole::PrintChar('2');
+  SerialConsole::PrintChar('J');
+  SerialConsole::PrintChar(27);
+  SerialConsole::PrintChar('[');
+  SerialConsole::PrintChar('H');
+}
+
 SerialConsole::SerialConsole() {
   // Disable and register IRQs
   struct IER ier = {};
