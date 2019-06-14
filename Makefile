@@ -40,6 +40,7 @@ C_SRC := $(wildcard arch/$(ARCH)/*.cpp \
 					mm/*.cpp \
 					mm/$(ARCH)/*.cpp \
 					syscall/$(ARCH)/*.cpp \
+					proc/*.cpp \
 					proc/$(ARCH)/*.cpp)
 
 C_OBJ := $(patsubst %.cpp, out/%.o, $(C_SRC))
@@ -110,6 +111,10 @@ out/mm/$(ARCH)/%.o: mm/$(ARCH)/%.cpp
 	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
 
 out/syscall/$(ARCH)/%.o: syscall/$(ARCH)/%.cpp
+	@mkdir -p $(shell dirname $@)
+	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
+
+out/proc/%.o: proc/%.cpp
 	@mkdir -p $(shell dirname $@)
 	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
 

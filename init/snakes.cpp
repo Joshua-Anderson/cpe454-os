@@ -33,10 +33,10 @@
 #include "arch/Platform.h"
 #include "drivers/display/Color.h"
 #include "kmalloc.h"
+#include "printk.h"
 #include "proc/Scheduler.h"
 #include "snakes.h"
 #include "syscall/SysCall.h"
-#include "printk.h"
 
 #define SN_LENGTH 10
 #define SN_BODY_CHAR '*'
@@ -82,7 +82,7 @@ static void srand(int newseed) {
 unsigned rand(void) {
   seed = (seed * 6364136223846793005U + 1442695040888963407U) &
          0x7fffffffffffffffU;
-  return (unsigned) seed;
+  return (unsigned)seed;
 }
 
 // Delay functions
@@ -348,7 +348,7 @@ static void move_hungry_snake(snake s) {
   while (obstructed(newhead) && !alldead) {
     deadends[s->dir] = 1;
     s->dir = (direction)(rand() % NUMDIRS);
-    if ((unsigned) s->dir >= NUMDIRS) {
+    if ((unsigned)s->dir >= NUMDIRS) {
       s->dir = (direction)(NUMDIRS - 1);
     }
     // s->dir = (int) ((1.0 * rand()/INT_MAX) * NUMDIRS);
@@ -416,7 +416,7 @@ extern void set_snake_delay(unsigned int msec) {
 static int noop_func(int i) { return i + 10; }
 
 static void delay() {
-  for (int i = 0; i < 0xFFFF; i++) noop_func(10);
+  for (int i = 0; i < 0xFFF; i++) noop_func(10);
 #if 0
   /*
    * Sleep for the number of milliseconds specified by
@@ -437,7 +437,7 @@ void setup_snakes(int hungry) {
   Process *snake;
 
   // Don't use this seed for anything meaningful
-  srand(Scheduler::CurProc()->GetPid());
+  srand(Scheduler::GetCurProc()->GetPid());
   rows = Platform::GetDflDisplay()->Rows();
   cols = Platform::GetDflDisplay()->Cols();
 

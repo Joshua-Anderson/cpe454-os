@@ -15,7 +15,7 @@ struct Regs {
   uint16_t cs, ss, ds;
 } __attribute__((packed));
 
-enum ProcState { RUNNING, RUNABLE };
+enum ProcState { RUNNING, RUNABLE, EXITED };
 
 class Process {
  public:

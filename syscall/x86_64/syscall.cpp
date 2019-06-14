@@ -12,35 +12,28 @@
 #define SYSCALL_RUN_NUM 3L
 
 static void syscall_yield(struct IRQ_Frame* frame) {
-  Process* cur_proc = Scheduler::CurProc();
-  Process* new_proc = Scheduler::Reschedule(0);
-
-  if (cur_proc == new_proc) {
-    return;
-  }
-
-  cur_proc->Save(frame);
-  new_proc->Load(frame);
+  Scheduler::GetCurProc()->Save(frame);
+  Scheduler::Reschedule()->Load(frame);
 }
 
 static void syscall_exit(struct IRQ_Frame* frame) {
   // Remove and resechedule the next thread
-  Process* new_proc = Scheduler::Reschedule(1);
+  Scheduler::GetCurProc()->State = EXITED;
+  Process* new_proc = Scheduler::Reschedule();
   if (new_proc) {
     new_proc->Load(frame);
     return;
   }
 
   // Return to the parent
-  Scheduler::parent_proc.Load(frame);
+  Scheduler::ParentProc.Load(frame);
 }
 
 static void syscall_run(struct IRQ_Frame* frame) {
   // Save Parent Context
 
-  // Return to the parent
-  Scheduler::parent_proc.Save(frame);
-  Process* new_proc = Scheduler::Reschedule(0);
+  Scheduler::ParentProc.Save(frame);
+  Process* new_proc = Scheduler::Reschedule();
   if (!new_proc) {
     return;
   }

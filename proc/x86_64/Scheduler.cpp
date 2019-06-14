@@ -3,53 +3,51 @@
 #include "../Scheduler.h"
 #include "kmalloc.h"
 
-unsigned Scheduler::nxt_pid = 0;
-struct ProcQueueEntry *Scheduler::cur_proc = NULL;
-Process Scheduler::parent_proc = Process(-1);
+unsigned Scheduler::nxtPid = 0;
+struct QueueEntry *Scheduler::curProc = NULL;
+Queue Scheduler::runQueue = Queue();
+Process Scheduler::ParentProc = Process(-1);
 
 Process *Scheduler::Add(kentry_t entry, void *arg) {
-  struct ProcQueueEntry *p =
-      (struct ProcQueueEntry *)kmalloc(sizeof(struct ProcQueueEntry));
-  p->proc = Process(Scheduler::nxt_pid, entry, arg);
-  Scheduler::nxt_pid++;
+  struct QueueEntry *p =
+      (struct QueueEntry *)kmalloc(sizeof(struct QueueEntry));
+  p->proc = Process(nxtPid, entry, arg);
+  nxtPid++;
   p->nxt = p;
   p->prev = p;
+  runQueue.Push(p);
 
-  if (!Scheduler::cur_proc) {
-    Scheduler::cur_proc = p;
-    return &p->proc;
-  }
-
-  p->nxt = Scheduler::cur_proc->nxt;
-  p->prev = Scheduler::cur_proc;
-  p->nxt->prev = p;
-  Scheduler::cur_proc->nxt = p;
   return &p->proc;
 }
 
-Process *Scheduler::Reschedule(int remove) {
-  if (!Scheduler::cur_proc) {
+Process *Scheduler::Reschedule() {
+  if (curProc->proc.State == EXITED) {
+    kfree(curProc);
+    curProc = NULL;
+  }
+
+  // If there's nothing else to run, keep running the current process
+  if (runQueue.Length() == 0) {
+    if (curProc) {
+      return &curProc->proc;
+    }
     return NULL;
   }
 
-  Scheduler::cur_proc = Scheduler::cur_proc->nxt;
-
-  if (remove) {
-    // Removing last process from list
-    if (Scheduler::cur_proc == Scheduler::cur_proc->nxt) {
-      Scheduler::cur_proc->proc.Destroy();
-      kfree(Scheduler::cur_proc);
-      Scheduler::cur_proc = NULL;
-      return NULL;
-    }
-    struct ProcQueueEntry *tmp = Scheduler::cur_proc->prev;
-    tmp->prev->nxt = tmp->nxt;
-    tmp->nxt->prev = tmp->prev;
-    tmp->proc.Destroy();
-    kfree(tmp);
+  // If process is still running, re-add it to runnable queue
+  if (curProc &&
+      (curProc->proc.State == RUNNING || curProc->proc.State == RUNABLE)) {
+    curProc->proc.State = RUNABLE;
+    runQueue.Push(curProc);
   }
 
-  return &Scheduler::cur_proc->proc;
+  curProc = runQueue.Pop();
+  if (curProc == NULL) {
+    return NULL;
+  }
+
+  curProc->proc.State = RUNNING;
+  return &curProc->proc;
 }
 
-Process *Scheduler::CurProc() { return &Scheduler::cur_proc->proc; }
+Process *Scheduler::GetCurProc() { return &curProc->proc; }

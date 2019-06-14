@@ -29,7 +29,6 @@ void Process::Load(struct IRQ_Frame* frame) {
 
   void* reg_start = (void*)((intptr_t)frame - STACK_REGS_SIZE);
   memcpy(reg_start, (void*)&(Process::regs), STACK_REGS_SIZE);
-  Process::State = RUNNING;
 }
 
 void Process::Save(struct IRQ_Frame* frame) {
@@ -38,7 +37,6 @@ void Process::Save(struct IRQ_Frame* frame) {
   Process::regs.rflags = frame->rflags;
   Process::regs.rsp = frame->rsp;
   Process::regs.ss = frame->ss;
-  Process::State = RUNABLE;
 }
 
 void Process::Destroy() {
