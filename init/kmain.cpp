@@ -11,20 +11,10 @@
 #include "snakes.h"
 #include "syscall/SysCall.h"
 
-void thread1(void *arg) {
-  int a = 61;
-  printk("Thread 1: Testing %d, 0x%p\n", a, arg);
-  SysCall::ProcYield();
-  printk("Thread 1: Testing %d, 0x%p\n", a, arg);
-  SysCall::ProcExit();
-}
-
-void thread2(void *arg) {
-  int a = 42;
-  printk("Thread 2: Testing %d, 0x%p\n", a, arg);
-  SysCall::ProcYield();
-  printk("Thread 2: Testing %d, 0x%p\n", a, arg);
-  SysCall::ProcExit();
+void kdb_print(void *) {
+  while (1) {
+    printk("%c\n", Platform::GetDflInput()->GetChar());
+  }
 }
 
 void kmain() {
@@ -41,25 +31,13 @@ void kmain() {
   printc("Huge Adder: %p\n", huge);
   kfree(huge);
 
-  Platform::GetDflInput()->GetChar();
-  setup_snakes(1);
-
-  // int test = 0;
-  // int anothertest = 1;
-  // Scheduler::Add(thread1, &test);
-  // Scheduler::Add(thread2, &anothertest);
+  Scheduler::Add(kdb_print, NULL);
 
   while (1) {
     printk("Running Threads...\n");
     SysCall::ProcRun();
     printk("Threads done...\n");
     IRQ::BlockForIRQ();
-  }
-
-  printk("> ");
-
-  while (1) {
-    printk("%c", Platform::GetDflInput()->GetChar());
   }
   return;
 }

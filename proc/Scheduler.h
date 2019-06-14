@@ -7,8 +7,10 @@
 class Scheduler {
  public:
   static Process* Add(kentry_t entry, void* arg);
+  static void Unblock(Queue*);
   static Process* Reschedule();
   static Process* GetCurProc();
+  static void BlockCurProc(Queue*);
   static Process ParentProc;
 
  private:

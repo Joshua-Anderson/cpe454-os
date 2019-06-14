@@ -13,7 +13,15 @@
 
 static void syscall_yield(struct IRQ_Frame* frame) {
   Scheduler::GetCurProc()->Save(frame);
-  Scheduler::Reschedule()->Load(frame);
+  Process* proc = Scheduler::Reschedule();
+
+  // If there's no process, return to parent
+  if (!proc) {
+    Scheduler::ParentProc.Load(frame);
+    return;
+  }
+
+  proc->Load(frame);
 }
 
 static void syscall_exit(struct IRQ_Frame* frame) {

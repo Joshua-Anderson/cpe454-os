@@ -4,6 +4,9 @@
 #include "arch/x86_64/arch.h"
 #include "irq/IRQ.h"
 #include "printk.h"
+#include "proc/Queue.h"
+#include "proc/Scheduler.h"
+#include "syscall/SysCall.h"
 
 #define PS2_DATA_REG 0x60
 #define PS2_CMD_REG 0x64
@@ -44,6 +47,7 @@ struct PS2_CtrlCfg {
 static uint8_t buf[BUF_SIZE];
 static volatile int buf_prod = 0;
 static volatile int buf_consumer = 0;
+static Queue blockQueue = Queue();
 
 static inline void poll_ps2_outb(uint8_t val) {
   while (1) {
@@ -72,6 +76,9 @@ void PS2_irq_handler(uint32_t, uint32_t) {
   if (buf_prod == buf_consumer) {
     BUF_INC(buf_consumer);
   }
+
+  // Unblock every process waiting for KBD input
+  Scheduler::Unblock(&blockQueue);
 }
 
 PS2::PS2() {
@@ -116,13 +123,20 @@ char PS2::GetLetter(char c) {
 char PS2::GetChar() {
   uint8_t val;
 
+  IRQ::Disable();
+  if (blockQueue.Length() > 0) {
+    ERROR("Only one thread is permitted to read the keyboard at once");
+  }
+  IRQ::Enable();
+
   while (1) {
     IRQ::Disable();
     if (buf_consumer != buf_prod) {
       break;
     }
+    Scheduler::BlockCurProc(&blockQueue);
     IRQ::Enable();
-    hlt();
+    SysCall::ProcYield();
   }
 
   val = buf[buf_consumer];

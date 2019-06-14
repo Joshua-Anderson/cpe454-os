@@ -20,6 +20,21 @@ Process *Scheduler::Add(kentry_t entry, void *arg) {
   return &p->proc;
 }
 
+void Scheduler::Unblock(struct Queue *blockQueue) {
+  for (unsigned i = 0; i < blockQueue->Length(); i++) {
+    struct QueueEntry *entry = blockQueue->Pop();
+
+    // Edge case where proc is blocked but unblocked before yielding
+    if (entry == curProc) {
+      entry->proc.State = RUNNING;
+      continue;
+    }
+
+    entry->proc.State = RUNABLE;
+    runQueue.Push(entry);
+  }
+}
+
 Process *Scheduler::Reschedule() {
   if (curProc->proc.State == EXITED) {
     kfree(curProc);
@@ -28,15 +43,14 @@ Process *Scheduler::Reschedule() {
 
   // If there's nothing else to run, keep running the current process
   if (runQueue.Length() == 0) {
-    if (curProc) {
+    if (curProc && curProc->proc.CanRun()) {
       return &curProc->proc;
     }
     return NULL;
   }
 
   // If process is still running, re-add it to runnable queue
-  if (curProc &&
-      (curProc->proc.State == RUNNING || curProc->proc.State == RUNABLE)) {
+  if (curProc && curProc->proc.CanRun()) {
     curProc->proc.State = RUNABLE;
     runQueue.Push(curProc);
   }
@@ -51,3 +65,8 @@ Process *Scheduler::Reschedule() {
 }
 
 Process *Scheduler::GetCurProc() { return &curProc->proc; }
+
+void Scheduler::BlockCurProc(Queue *blockQueue) {
+  curProc->proc.State = BLOCKED;
+  blockQueue->Push(curProc);
+}

@@ -15,7 +15,7 @@ struct Regs {
   uint16_t cs, ss, ds;
 } __attribute__((packed));
 
-enum ProcState { RUNNING, RUNABLE, EXITED };
+enum ProcState { RUNNING, RUNABLE, EXITED, BLOCKED };
 
 class Process {
  public:
@@ -25,7 +25,8 @@ class Process {
   // with though, since it makes classes harder to instanciate and genericise.
   Process(unsigned pid);
   Process(unsigned pid, kentry_t, void *);
-  unsigned GetPid() { return Process::pid; }
+  unsigned GetPid() { return pid; }
+  int CanRun() { return (State == RUNNING || State == RUNABLE); }
   ProcState State;
 
   // x86_64 Specific Functions
