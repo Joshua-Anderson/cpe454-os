@@ -10,7 +10,8 @@ class Scheduler {
   static void Unblock(Queue*);
   static Process* Reschedule();
   static Process* GetCurProc();
-  static void BlockCurProc(Queue*);
+  static void BlockCurProc(Queue*, uint64_t block_data_1,
+                           uint64_t block_data_2);
   static Process ParentProc;
 
  private:

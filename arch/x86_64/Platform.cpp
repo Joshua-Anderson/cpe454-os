@@ -1,4 +1,5 @@
 #include "arch/Platform.h"
+#include "drivers/block/x86_64/AtaDevice.h"
 #include "drivers/char/x86_64/PS2.h"
 #include "drivers/display/x86_64/SerialConsole.h"
 #include "drivers/display/x86_64/VgaConsole.h"
@@ -23,4 +24,10 @@ Page* Platform::GetDflPageTable() {
   static Page page = Page();
 
   return &page;
+}
+
+BlockDevice* Platform::GetDflHardDrive() {
+  static AtaDevice ata = AtaDevice();
+
+  return &ata;
 }

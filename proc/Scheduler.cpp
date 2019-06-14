@@ -31,6 +31,8 @@ void Scheduler::Unblock(struct Queue *blockQueue) {
     }
 
     entry->proc.State = RUNABLE;
+    entry->block_data_1 = 0;
+    entry->block_data_2 = 0;
     runQueue.Push(entry);
   }
 }
@@ -66,7 +68,10 @@ Process *Scheduler::Reschedule() {
 
 Process *Scheduler::GetCurProc() { return &curProc->proc; }
 
-void Scheduler::BlockCurProc(Queue *blockQueue) {
+void Scheduler::BlockCurProc(Queue *blockQueue, uint64_t block_data_1,
+                             uint64_t block_data_2) {
   curProc->proc.State = BLOCKED;
+  curProc->block_data_1 = block_data_1;
+  curProc->block_data_2 = block_data_2;
   blockQueue->Push(curProc);
 }

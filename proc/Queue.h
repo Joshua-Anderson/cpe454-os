@@ -21,6 +21,8 @@ class Queue {
 struct QueueEntry {
   Process proc;
   Queue* queue;
+  uint64_t block_data_1;
+  uint64_t block_data_2;
   struct QueueEntry* nxt;
   struct QueueEntry* prev;
 };

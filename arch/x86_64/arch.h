@@ -9,6 +9,7 @@
 
 #define PS2_IRQ 33
 #define SERIAL_IRQ 36
+#define ATA_IRQ 46
 #define SYSCALL_IRQ 48
 
 extern "C" {
@@ -20,6 +21,12 @@ inline void outb(uint16_t port, uint8_t val) {
 inline uint8_t inb(uint16_t port) {
   uint8_t ret;
   asm volatile("inb %1, %0" : "=a"(ret) : "Nd"(port));
+  return ret;
+}
+
+inline uint16_t inw(uint16_t port) {
+  uint16_t ret;
+  asm volatile("inw %1, %0" : "=a"(ret) : "Nd"(port));
   return ret;
 }
 

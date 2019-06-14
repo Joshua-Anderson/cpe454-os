@@ -134,7 +134,7 @@ char PS2::GetChar() {
     if (buf_consumer != buf_prod) {
       break;
     }
-    Scheduler::BlockCurProc(&blockQueue);
+    Scheduler::BlockCurProc(&blockQueue, 0, 0);
     IRQ::Enable();
     SysCall::ProcYield();
   }

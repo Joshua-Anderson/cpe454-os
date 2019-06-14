@@ -26,22 +26,21 @@ C_HDR := $(wildcard init/*.h \
 					lib/*.h \
 					drivers/display/*.h drivers/display/$(ARCH)/*.h \
 					drivers/char/*.h drivers/char/$(ARCH)/*.h \
+					drivers/block/*.h drivers/block/$(ARCH)/*.h \
 					irq/*.h \
 					mm/*.h \
-					syscall/*.h \
-					syscall/$(ARCH)/*.h \
-					proc/*.h \
-					proc/$(ARCH)/*.h)
+					syscall/*.h syscall/$(ARCH)/*.h \
+					proc/*.h proc/$(ARCH)/*.h)
 C_SRC := $(wildcard arch/$(ARCH)/*.cpp \
 					init/*.cpp lib/*.cpp \
 					drivers/display/$(ARCH)/*.cpp \
 					drivers/char/$(ARCH)/*.cpp \
+					drivers/block/$(ARCH)/*.cpp \
 					irq/$(ARCH)/*.cpp \
 					mm/*.cpp \
 					mm/$(ARCH)/*.cpp \
 					syscall/$(ARCH)/*.cpp \
-					proc/*.cpp \
-					proc/$(ARCH)/*.cpp)
+					proc/*.cpp proc/$(ARCH)/*.cpp)
 
 C_OBJ := $(patsubst %.cpp, out/%.o, $(C_SRC))
 
@@ -119,5 +118,9 @@ out/proc/%.o: proc/%.cpp
 	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
 
 out/proc/$(ARCH)/%.o: proc/$(ARCH)/%.cpp
+	@mkdir -p $(shell dirname $@)
+	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@
+
+out/drivers/block/$(ARCH)/%.o: drivers/block/$(ARCH)/%.cpp
 	@mkdir -p $(shell dirname $@)
 	$(CROSS_CPP) $(CPPFLAGS) -c $< -o $@

@@ -170,8 +170,8 @@ void IRQ::ClearMask(int irq) {
 }
 
 void irq_maskall() {
-  outb(PIC_MASTER_DATA_REG, 0b11011111);
-  outb(PIC_MASTER_DATA_REG, 0xF);
+  outb(PIC_MASTER_DATA_REG, 0b11111011);
+  outb(PIC_SLAVE_DATA_REG, 0xFF);
 }
 
 void IRQ::Register(int num, void (*hndlr)(uint32_t, uint32_t)) {
