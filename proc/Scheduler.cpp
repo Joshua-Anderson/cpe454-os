@@ -2,6 +2,7 @@
 
 #include "../Scheduler.h"
 #include "kmalloc.h"
+#include "printk.h"
 
 unsigned Scheduler::nxtPid = 0;
 struct QueueEntry *Scheduler::curProc = NULL;
@@ -23,6 +24,8 @@ Process *Scheduler::Add(kentry_t entry, void *arg) {
 void Scheduler::Unblock(struct Queue *blockQueue) {
   for (unsigned i = 0; i < blockQueue->Length(); i++) {
     struct QueueEntry *entry = blockQueue->Pop();
+    entry->block_data_1 = 0;
+    entry->block_data_2 = 0;
 
     // Edge case where proc is blocked but unblocked before yielding
     if (entry == curProc) {
@@ -31,8 +34,6 @@ void Scheduler::Unblock(struct Queue *blockQueue) {
     }
 
     entry->proc.State = RUNABLE;
-    entry->block_data_1 = 0;
-    entry->block_data_2 = 0;
     runQueue.Push(entry);
   }
 }

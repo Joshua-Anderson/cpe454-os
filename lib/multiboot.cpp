@@ -77,10 +77,8 @@ struct mb_info parse_multiboot(uint32_t magic, uint8_t* header) {
 
   while (pos < max) {
     struct mb_subheader* sh = (struct mb_subheader*)pos;
-    printc("Pos: %p, Type: %u, Size %d\n", pos, sh->type, sh->size);
 
     if (sh->type == 0) {
-      printc("Terminating tag\n");
       break;
     }
 
@@ -110,7 +108,7 @@ struct mb_info parse_multiboot(uint32_t magic, uint8_t* header) {
   }
 
   if (pos >= max) {
-    printa("Err: Invalid Multiboot Header\n");
+    ERROR("Invalid Multiboot Header");
   }
 
   return info;

@@ -112,8 +112,6 @@ AtaDevice::AtaDevice() {
   outb(ATA_DEV_CNTRL_REG, *val);
   IRQ::ClearMask(ATA_IRQ);
   struct AtaStatusReg status = get_ata_status();
-  printc("ATA status: err %u, drq %u, ready %u, bsy %u\n", status.err,
-         status.drq, status.ready, status.busy);
 }
 
 int AtaDevice::ReadBlock(uint64_t block, void *dest) {
@@ -122,7 +120,6 @@ int AtaDevice::ReadBlock(uint64_t block, void *dest) {
 
   if (inProgress.Length() == 0) {
     inProgress.Push(blockedQueue.Pop());
-    printc("Trying to read block 0x%lx\n", block);
     read_ata_block(inProgress.Peak()->block_data_1);
   }
 

@@ -231,6 +231,7 @@ static int free_virt_4k_chunk(struct PTEntry* pt, void* start, void* end) {
 uint64_t Page::KernStackPos = Page::KSTACK_START_ADDR;
 
 void* Page::AllocKernStackMem() {
+  IRQ::Disable();
   struct PTEntry* curPT;
   get_reg("cr3", curPT);
   void* start = (void*)Page::KernStackPos;
@@ -241,14 +242,17 @@ void* Page::AllocKernStackMem() {
   }
   Page::KernStackPos = (uint64_t)end;
   // Stack grows up, return address to bottom of stack
+  IRQ::Enable();
   return end;
 }
 
 void Page::FreeKernStackMem(void* addr) {
+  IRQ::Disable();
   struct PTEntry* curPT;
   get_reg("cr3", curPT);
   free_virt_4k_chunk(curPT, (void*)((intptr_t)addr - Page::KTHREAD_STACK_SIZE),
                      addr);
+  IRQ::Enable();
 }
 
 uint64_t Page::KernHeapPos = Page::KHEAP_START_ADDR;
@@ -256,6 +260,7 @@ uint64_t Page::KernHeapPos = Page::KHEAP_START_ADDR;
 void* Page::AllocKernHeapPage() { return Page::AllocKernHeap(Page::PAGE_SIZE); }
 
 void* Page::AllocKernHeap(uint32_t size) {
+  IRQ::Disable();
   struct PTEntry* curPT;
   get_reg("cr3", curPT);
   void* start = (void*)Page::KernHeapPos;
@@ -266,6 +271,7 @@ void* Page::AllocKernHeap(uint32_t size) {
   }
   Page::KernHeapPos = (uint64_t)end;
   return start;
+  IRQ::Enable();
 }
 
 void Page::FreeKernHeapPage(void* addr) {
@@ -273,9 +279,11 @@ void Page::FreeKernHeapPage(void* addr) {
 }
 
 void Page::FreeKernHeap(void* addr, uint32_t size) {
+  IRQ::Disable();
   struct PTEntry* curPT;
   get_reg("cr3", curPT);
   free_virt_4k_chunk(curPT, addr, (void*)((intptr_t)addr + size));
+  IRQ::Enable();
 }
 
 Page::Page() {
